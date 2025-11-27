@@ -19,42 +19,56 @@
 
 ```mermaid
 flowchart TD
-    A[COMSOL Multiphysics 6.0<br/>2D 軸對稱模型] --> B{參數掃描}
+    A[COMSOL Multiphysics 6.0<br/>2D 軸對稱 + 電磁-電漿耦合模組] --> B{參數掃描設計}
 
-    B --> C[實驗一：功率掃描<br/>P_in = 1~10⁵ W<br/>固定 r = 47.7 mm]
-    B --> D[實驗二：幾何掃描<br/>r = 5~1000 mm<br/>尋找點火功率 P_cutoff]
+    B --> C[實驗一：功率掃描<br/>P_in = 1~10⁵ W<br/>固定 r = 47.7mm]
+    B --> D[實驗二：幾何掃描<br/>r = 5~1000mm<br/>尋找 P_cutoff]
 
-    C --> E[VTU 數據輸出<br/>電子密度、溫度分布]
+    C --> E[VTU 輸出<br/>電子密度 n_e<br/>能量沉積分布]
     D --> E
 
-    E --> F[數據處理管線]
-    F --> F1[generate_pin_table.py<br/>解析 VTU + 分配功率標籤]
-    F1 --> F2[build_dataset.py<br/>KDE 統計聚合]
+    E --> F[數據處理]
+    F --> F1[generate_pin_table.py<br/>VTU 解析]
+    F1 --> F2[build_dataset.py<br/>KDE 統計]
 
-    F2 --> G{三個研究方向}
+    F2 --> G{核心物理發現}
 
-    G --> H[Research 1<br/>功率-密度標度律]
-    G --> I[Research 2<br/>500W 空間分布]
-    G --> J[Research 3<br/>功率-半徑趨勢]
+    G --> M1[轉變一：點火閾值<br/>E > E_crit 雪崩式擊穿<br/>低功率出現斷層]
+    G --> M2[轉變二：模式轉換<br/>n_e > n_cr 時發生<br/>E-mode → W-mode]
 
-    H --> H1[發現：n_e ∝ P_in^0.73-0.78<br/>次線性冪次律]
-    I --> I1[發現：徑向尺度飽和<br/>大腔體 r>200mm]
-    J --> J1[發現：P_cutoff ∝ r^-7.42<br/>截止波導點火困難]
+    M1 --> T1[區域 III<br/>未點火<br/>P < P_cutoff]
+    M2 --> T2[區域 II<br/>體積波加熱<br/>E-mode]
+    M2 --> T3[區域 I<br/>表面波加熱<br/>W-mode]
 
-    H1 --> K[核心結論]
-    I1 --> K
-    J1 --> K
+    T1 --> R1[Research 1<br/>功率-密度標度律]
+    T2 --> R1
+    T3 --> R1
 
-    K --> K1[點火閾值與模式轉換<br/>雙邊界運行地圖]
-    K --> K2[擴散-複合損失競爭<br/>限制能量耦合效率]
-    K --> K3[波導截止與飽和<br/>幾何效應量化]
+    T2 --> R2[Research 2<br/>空間分布分析]
+    T3 --> R2
+
+    T1 --> R3[Research 3<br/>幾何效應]
+    T2 --> R3
+
+    R1 --> S1[n_e ∝ P_in^0.73-0.78<br/>擴散與體複合並存]
+    R2 --> S2[能量沉積從體積中心<br/>轉移到介面薄層<br/>δ_p ∝ 1/√n_e]
+    R3 --> S3[P_cutoff ∝ r^-7.42<br/>截止波導漸逝波<br/>徑向飽和 r>200mm]
+
+    S1 --> K[三區域運行地圖]
+    S2 --> K
+    S3 --> K
+
+    K --> K1[點火閾值 E_crit<br/>決定能否產生電漿]
+    K --> K2[臨界密度 n_cr<br/>決定加熱模式]
+    K --> K3[波導截止與物理尺度<br/>決定幾何耦合效率]
 
     style A fill:#e1f5ff
-    style E fill:#fff4e1
-    style K fill:#e8f5e9
-    style H1 fill:#f3e5f5
-    style I1 fill:#f3e5f5
-    style J1 fill:#f3e5f5
+    style M1 fill:#ffe1e1
+    style M2 fill:#ffe1e1
+    style T1 fill:#f5f5f5
+    style T2 fill:#fff4e1
+    style T3 fill:#e8f5e9
+    style K fill:#e3f2fd
 ```
 
 ## 資料夾結構
