@@ -1,0 +1,88 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environments
+venv/
+env/
+ENV/
+electron_density_env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# Large data files (use Git LFS or store elsewhere)
+*.vtu
+*.pins
+research1/datasets/
+research1/data/all_values.csv
+
+# Keep small summary files
+!research1/data/all_stats.csv
+!research1/data/dataset_index.txt
+
+# Output plots (generated from code)
+plots/
+research1/plots/
+research2/plots/
+research3/plots/
+個別科學研究成果報告書/plots/
+簡報/plots/
+
+# Keep example plots or important figures
+!個別科學研究成果報告書/plots/*.png
+!簡報/plots/*.png
+
+# LaTeX auxiliary files
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.out
+*.toc
+*.synctex.gz
+*.nav
+*.snm
+*.vrb
+*.bcf
+*.run.xml
+*.xdv
+missfont.log
+
+# LaTeX output (keep final PDFs)
+# Uncomment next line if you don't want to track PDFs
+# *.pdf
+
+# Large binary files
+*.pptx
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+
+# CSV files (data outputs - usually regenerated)
+*.csv
+!requirements.txt

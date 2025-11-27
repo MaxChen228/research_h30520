@@ -1,0 +1,1203 @@
+\documentclass[12pt, a4paper]{article}
+
+% --- 1. 版面配置與字體設定 (根據繳交格式說明) ---
+\usepackage[top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry} % 邊界設定
+\usepackage{graphicx} % 插入圖片所需
+\usepackage{amsmath} % 數學公式
+\usepackage{amssymb}
+\usepackage{booktabs} % 表格美化
+\usepackage{hyperref} % 超連結
+\usepackage{listings} % 程式碼語法高亮
+\usepackage{xcolor} % 程式碼顏色設定
+
+% 程式碼配色方案（專業風格）
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    backgroundcolor=\color{white},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    frame=single,
+    rulecolor=\color{black},
+    tabsize=4,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    escapeinside={\%*}{*)},
+    xleftmargin=2em,
+    framexleftmargin=1.5em
+}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,      
+    urlcolor=blue,
+    citecolor=blue,
+}
+\usepackage{ctex} % 中文處理套件
+
+% 設定繁體中文章節名稱
+\ctexset{
+  contentsname={目錄},
+  listfigurename={圖目錄},
+  listtablename={表目錄},
+  figurename={圖},
+  tablename={表},
+  abstractname={摘要},
+  indexname={索引},
+  appendixname={附錄},
+  bibname={參考文獻}
+}
+
+% 調整標點符號間距和字間距
+\xeCJKsetup{
+  PunctStyle=plain,
+  CJKglue={\hskip 0pt plus 0.08\baselineskip}
+}
+
+\setmainfont{Times New Roman} % 設定英文字體
+\setCJKmainfont{BiauKaiTC} % 設定中文字體為「標楷體-繁」
+\linespread{1.5} % 設定行距
+
+% --- 2. 頁碼設定 ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % 清除頁首頁尾
+\cfoot{\thepage} % 頁碼置於頁尾中央
+\renewcommand{\headrulewidth}{0pt} % 移除頁首橫線
+
+% --- 3. 標題次序設定 (一、 (一) 1. (1)) ---
+\renewcommand{\thesection}{\chinese{section}、}
+\renewcommand{\thesubsection}{（\chinese{subsection}）}
+\renewcommand{\thesubsubsection}{\arabic{subsubsection}.}
+
+% --- 正文開始 ---
+\begin{document}
+
+% --- 封面 ---
+\begin{titlepage}
+    \centering
+    \vspace*{\stretch{1.0}}
+    {\Huge \bfseries 國立新竹科學園區實驗高級中等學校/國立清華大學}
+    \vspace{0.5cm}
+    {\Huge \bfseries 第十五屆科學班}
+    \vspace{2cm}
+    {\Huge \bfseries 高三個別科學研究成果報告書}
+    \vspace{3cm}
+    {\LARGE \bfseries COMSOL 模擬 2.45GHz 圓形波導微波電漿之參數研究：\\不同功率下激發模式轉變分析}
+    \vspace{3cm}
+    \Large
+    \begin{flushleft}
+    \begin{tabular}{ll}
+        作       & 者：陳亮宇 \\
+        指導教授 & ：張存續 教授 \\
+        助       教 & ：趙賢文 博士 \\
+    \end{tabular}
+    \end{flushleft}
+    \vspace*{\stretch{2.0}}
+    {\large 中華民國115年6月}
+\end{titlepage}
+
+% --- 目錄 ---
+\newpage
+\pagenumbering{Roman} % 目錄頁碼使用羅馬數字
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+\listoftables
+\newpage
+
+% --- 報告內文 ---
+\pagenumbering{arabic} % 內文頁碼使用阿拉伯數字
+\setcounter{page}{1}
+
+\section{前言}
+微波電漿 (Microwave Plasma) 因具備高效率、高電漿密度、無電極污染等優點，在現代半導體製程（如蝕刻、化學氣相沉積 CVD）、薄膜沉積及其他材料科學領域中，扮演著核心角色。然而，其背後的物理機制仍存在著基礎性的科學難題。
+
+根據經典電磁理論，當電漿中的電子密度 $n_e$ 超過該微波頻率對應的「截止密度 (Cutoff Density)」 $n_{cr}$ 時，電漿會呈現「過密度 (Overdense)」狀態。在這種狀態下，入射的微波應被電漿表面反射，無法穿透進入其內部。以本研究使用的 2.45 GHz 微波為例，其對應的截止密度約為 $n_{cr} \approx 7.44 \times 10^{16} \, \text{m}^{-3}$。一個直觀的問題隨之而生：既然微波無法穿透，那麼過密度電漿是如何能夠持續吸收微波能量，並維持在高密度狀態的呢？
+
+目前學界的共識是，能量並非透過傳統的體積穿透，而是藉由一種特殊的表面電磁波——「表面波電漿 (Surface-Wave Plasma, SWP)」——在電漿與介電質（如石英管壁）的交界面上传播。這種表面波能夠將能量耦合至電漿中，即便其主體密度已遠超截止密度。然而，從體積波加熱到表面波加熱的轉變過程、能量與電漿密度的定量關係，以及反應腔體的幾何結構如何影響電漿的點燃與維持，這些關鍵問題仍需深入的量化研究。本研究旨在利用數值模擬工具，系統性地探討這些物理過程，並建立其間的物理規律。
+
+\section{研究目的}
+本研究旨在利用 COMSOL Multiphysics 軟體，建立一個耦合電磁波與電漿物理的二維軸對稱模型，以深入探討 2.45 GHz 圓形波導微波電漿的物理特性。具體研究目的如下：
+
+\begin{enumerate}
+    \item \textbf{探討功率與電子密度的標度律 (Scaling Law)：} 在固定的反應腔體幾何下，系統性地改變輸入功率 ($P_{in}$)，分析其對應的穩態電子密度 ($n_e$) 分布，並建立兩者之間的定量數學關係。
+    \item \textbf{識別並驗證物理模式的轉變：} 觀察在不同功率下，電漿的能量沉積模式是否存在從「體積加熱」到「表面加熱」的轉變，並從模擬數據中尋找支持「點火閾值 (Ignition Threshold)」與「模式轉換 (Mode Transition)」兩種不同物理機制的證據。
+    \item \textbf{分析幾何尺寸對點火條件的影響：} 系統性地改變反應腔體的半徑 ($r$)，找出在不同尺寸下點燃電漿所需的「最小截止功率 ($P_{cutoff}$)」 ，並驗證其與波導截止理論的關係。
+    \item \textbf{研究電漿徑向尺度的飽和效應：} 探討反應腔體半徑如何影響電漿本身的空間分佈，特別是在大尺寸腔體中，電漿的徑向尺度是否會因受限於表面波的物理特性而出現飽和現象。
+\end{enumerate}
+
+\section{文獻探討}
+微波電漿的模擬與理論研究已有數十年的歷史。本研究建立在眾多前人的基礎之上，主要涉及以下幾個核心領域：
+
+\subsection{過密度電漿與表面波加熱}
+如前言所述，過密度電漿的維持是微波電漿研究中的一個核心問題。COMSOL 的一篇官方文章明確指出，對於 2.45 GHz 微波，其臨界電子密度約為 $7.6 \times 10^{16} \, \text{m}^{-3}$，當密度高於此值時，電磁波將轉為無法在體積中傳播的漸逝波 (evanescent waves) \cite{comsol_blog}。然而，正是這種漸逝波，為表面波的產生提供了條件。一篇關於「表面波維持放電」的綜述性文章解釋道，能量可以透過在電漿-介電質邊界傳播的表面波來耦合至電漿，從而維持遠高於截止密度的電漿狀態 \cite{swp_wiki}。此現象清晰地分離了兩種加熱機制：低密度下的體積加熱與高密度下的表面加熱。Nagatsu 與 Sugai 的研究也同樣探討了表面波如何在截止條件下產生高密度電漿 \cite{nagatsu_sugai}。
+
+\subsection{功率-密度關係的次線性特徵}
+在理想情況下，人們可能預期輸入功率與產生的電子密度成正比。然而，實驗與模擬經常觀察到如本研究發現的 $n_e \propto P_{in}^{\alpha}$（其中 $\alpha < 1$）的次線性關係。一篇 2022 年發表於 *Physical Review E* 的論文深入探討了「每個電子吸收與損失的功率」這一概念，為解釋此現象提供了理論框架 \cite{per_electron_power}。該研究指出，隨著電漿密度升高，能量損失的途徑（如電子擴散至管壁的複合、輻射損失等）會變得更加顯著，導致能量轉換效率下降，從而使密度增長趨緩，表現為次線性關係。
+
+\subsection{截止波導中的電漿點火}
+在小於波導截止尺寸的腔體中點燃電漿，是另一個極具挑戰性的課題。一篇發表在 *ResearchGate* 上的論文，其標題即為「在截止尺寸以下的微波導引與電漿產生機制」，與本研究的實驗二 (A) 高度相關 \cite{below_cutoff}。該研究同樣探討了在截止波導中，需要極高的輸入功率才能使局部電場強度達到氣體的「擊穿閾值電場 ($E_{th}$)」 \cite{below_cutoff}。這與本研究觀察到的 $P_{cutoff} \propto r^{-7.42}$ 的急劇上升趨勢，在物理機制上是完全一致的。另一篇論文也驗證了電漿的維持取決於電場強度是否能超過氣體的擊穿閾值 \cite{jet_device}。
+
+\subsection{電漿尺度的幾何限制與飽和}
+當反應腔體尺寸改變時，電漿的空間分佈也會隨之變化。一篇探討「微波維持電漿柱徑向收縮」的論文觀察到，在高氣壓下，電漿的發光區域並不會完全填滿整個腔體，而是會「從管壁後退」 \cite{radial_contraction}。這與本研究在實驗二 (B) 中發現的「徑向尺度飽和」現象提供了概念上的支持：即當腔體足夠大時，管壁不再是限制電漿尺度的主要因素，此時電漿的大小將由表面波的內在物理特性（如衰減長度）所決定。
+
+\clearpage
+\section{研究方法}
+本研究採用數值模擬方法，利用商業有限元素分析軟體 COMSOL Multiphysics 6.0 進行。我們建立了一個二維軸對稱 (2D Axisymmetric) 模型，用以模擬在圓形波導結構中的微波電漿行為。
+
+\subsection{物理模型與統御方程式}
+模型耦合了兩個核心的物理模組：
+\begin{enumerate}
+    \item \textbf{電磁波 (Electromagnetic Waves, Frequency Domain)：} 此模組用以計算微波在腔體與電漿中的傳播與能量沉積。求解的方程式為頻率域形式的馬克士威方程組 \cite{griffiths_electrodynamics, cheng_fieldwave}：
+    $$ \nabla \times (\mu_r^{-1} \nabla \times \mathbf{E}) - k_0^2 (\epsilon_r - \frac{j\sigma}{\omega\epsilon_0}) \mathbf{E} = 0 $$
+    其中 $\mathbf{E}$ 是電場向量，$\omega$ 是微波角頻率 (2.45 GHz)，$\epsilon_r$ 是相對介電常數，$\sigma$ 是電導率。電漿的介電特性由其電子密度 $n_e$ 和碰撞頻率 $\nu_m$ 決定，並被納入複數介電常數中，從而實現電磁波與電漿的雙向耦合。
+    
+    \item \textbf{電漿 (Plasma Module)：} 此模組用以描述電漿中電子的產生、損失與傳輸。我們求解了電子的連續性方程式：
+    $$ \frac{\partial n_e}{\partial t} + \nabla \cdot \boldsymbol{\Gamma}_e = R_e $$
+    以及電子的能量平衡方程式。其中 $\boldsymbol{\Gamma}_e$ 是電子通量，由擴散 (diffusion) 與漂移 (drift) 構成。$R_e$ 是電子的淨生成率，包含了由電場加速的電子碰撞游離、附著、複合等一系列反應。電磁波模組計算出的功率沉積項，作為此處電子能量平衡方程式的熱源。
+\end{enumerate}
+
+\subsection{模擬幾何與邊界條件}
+模擬的幾何模型如圖 \ref{fig:geometry} 所示，由左側的微波輸入端口（同軸纜線或波導）和右側的石英介電管包圍的電漿反應腔室構成。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{plots/模型設置.png}
+  \caption{本研究所使用的二維軸對稱 COMSOL 模擬幾何模型。}
+  \label{fig:geometry}
+\end{figure}
+
+邊界條件設定如下：
+\begin{itemize}
+    \item \textbf{微波輸入：} 在左側端口設定為 TEM 模態的電磁波入射，並指定輸入功率 $P_{in}$。
+    \item \textbf{金屬壁：} 腔體的所有金屬邊界均設為理想導體 (Perfect Electric Conductor)。
+    \item \textbf{介電管壁：} 電子在石英管壁上發生表面複合反應而被吸收。
+\end{itemize}
+
+\subsection{實驗設計}
+本研究進行了兩組系統性的參數掃描模擬：
+\begin{enumerate}
+    \item \textbf{實驗一（功率掃描）：} 固定腔體半徑為 $r = 47.7 \, \text{mm}$，將輸入功率 $P_{in}$ 從 1 W 掃描至 $10^5$ W，記錄每一功率下達到穩態時的電子密度、能量沉積分佈等物理量。
+    \item \textbf{實驗二（幾何掃描）：} 將輸入功率固定在一個較低的值（如 20 W），並改變腔體的半徑 $r$ 從 5 mm 到 1000 mm。對於每一個半徑，模擬計算是否能成功點燃並維持電漿。若無法點燃，則逐步增加功率直至找到能夠點燃的最小功率，即「截止功率 $P_{cutoff}(r)$」。
+\end{enumerate}
+
+\subsection{數值求解流程與可重複性}
+本研究未啟用外加磁場模組。完整的模擬參數、邊界條件與數值設定彙整於附錄 A，以利後續重現與維護。
+
+\clearpage
+\section{結果與討論}
+\subsection{實驗一：功率掃描下的物理現象}
+\subsubsection{功率-密度標度律}
+在固定腔體半徑 ($r=47.7$ mm) 的條件下，我們首先觀察到電子密度的最大值 ($n_{e, \text{max}}$)、最小值 ($n_{e, \text{min}}$) 與眾數 ($n_{e, \text{mode}}$) 皆隨著輸入功率 $P_{in}$ 的增加而穩定上升。為了找出其間精確的數學關係，我們將數據繪製在對數-對數座標圖上（如圖 \ref{fig:loglog}）。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{plots/P_in vs. Electron Density 線性圖.png}
+
+  \vspace{0.5cm}
+
+  \includegraphics[width=0.85\textwidth]{plots/P_in vs. Electron Density 的 log-log 圖.png}
+  \caption{電子密度與輸入功率的關係圖。上圖為線性座標，下圖為對數-對數座標。對數座標下數據點呈現清晰的線性關係，表明兩者之間存在冪次定律。}
+  \label{fig:loglog}
+\end{figure}
+
+如圖 \ref{fig:loglog} 所示，數據點在對數座標下呈現出極佳的線性關係。透過線性擬合，我們發現其斜率約在 0.73 至 0.78 之間。這表明電子密度與輸入功率之間存在著一個次線性的冪次關係：
+$$ n_e \propto P_{in}^{0.7-0.8} $$
+此關係式的指數小於 1，這是一個關鍵的物理線索。它意味著能量從微波轉換為電漿的效率並非恆定。隨著輸入功率和電漿密度的增加，能量的損失機制（例如電子擴散至管壁後的表面複合反應、或是電漿的輻射損失）也變得更加顯著，從而消耗了更大比例的輸入能量，導致電子密度的增長速度跟不上功率的增長速度。
+
+
+\subsubsection{兩種核心物理轉變的證據}
+在整個功率掃描範圍內，我們觀察到兩種截然不同的物理轉變機制，它們共同主宰了電漿的行為。
+
+\paragraph{轉變一：點火閾值 (Ignition Threshold)}
+模擬顯示，在極低的輸入功率下（例如 $P_{in} < 22.8$ W），系統無法維持穩定的電漿。電漿並非從零開始平滑地生成，而是當功率超過一個特定的閾值後，以「跳變」的方式突然出現。如圖 \ref{fig:ignition} 所示的電子密度機率分佈圖中，在低功率區（$P_{in}$ 從 10 W 增加到 40 W），電子密度的分佈出現了顯著的不連續斷層，有力地證明了「點火閾值」的存在。其背後的物理機制是電漿的「雪崩式擊穿」：輸入功率所產生的電場 $E$ 必須大於一個由氣體種類與壓力決定的「臨界電場」$E_{crit}$，才能讓電子的游離速率壓過其損失速率，從而成功點燃電漿。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{plots/Electron Density Distribution 顯示低功率斷層.png}
+  \caption{在低功率區，電子密度機率分佈出現不連續斷層，證明了點火閾值的存在。}
+  \label{fig:ignition}
+\end{figure}
+
+\paragraph{轉變二：模式轉換 (Mode Transition)}
+隨著功率持續增加，能量沉積的位置發生了根本性的改變。當功率足夠高，使得大部分區域的電漿密度 $n_e$ 都超過了臨界密度 $n_{cr}$ 時，電漿變為「過密度」。此時，原本能在電漿體積中傳播的「體積波」被截止，系統被迫切換能量傳遞模式，改由在電漿與石英管的介面傳播的「表面波」來加熱電漿。
+
+圖 \ref{fig:mode_transition} 清晰地展示了這一過程。在低功率 (10 W) 時，能量沉積（電磁功率損耗密度）主要分佈在腔體的體積中心區域。隨著功率增加至 20 W 和 50 W，能量沉積模式逐漸轉變。而當功率增加至 200 W 時，能量沉積被高度壓縮至電漿上方的表面薄層。這直觀地展示了從「體積加熱」到「表面加熱」的模式轉換，驗證了表面波在高密度電漿維持中的主導作用。
+
+
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{plots/10W功率沉積.png}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{plots/20W功率沉積.png}
+  \end{minipage}
+
+  \vspace{0.5cm}
+
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{plots/50W功率沉積.png}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{plots/200W功率沉積.png}
+  \end{minipage}
+  \caption{模擬結果的視覺證據，展示不同功率下能量沉積模式的演化。從左上至右下依序為：10W（體積加熱）、20W（過渡）、50W（過渡）、200W（表面加熱），清晰地展示了模式轉換過程。}
+  \label{fig:mode_transition}
+\end{figure}
+
+
+\subsection{實驗二：幾何效應分析}
+\subsubsection{點火功率與波導截止}
+為了驗證我們提出的「點火閾值由臨界電場 $E_{crit}$ 決定」的理論，實驗二系統地研究了腔體半徑 $r$ 對最小點火功率 $P_{cutoff}$ 的影響。結果如圖 \ref{fig:cutoff} 所示。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{plots/截止功率-半徑趨勢分析.png}
+  \caption{點燃電漿所需的最小功率 ($P_{cutoff}$) 如何隨腔體半徑 ($r$) 變化的關係圖。}
+  \label{fig:cutoff}
+\end{figure}
+
+此圖揭示了幾個關鍵物理現象：
+\begin{enumerate}
+    \item \textbf{波導截止極限：} 在 $r = 35.9 \, \text{mm}$ 處，曲線出現一個急劇的轉折點。這個半徑對應的直徑約為 71.8 mm，與 2.45 GHz 微波在圓形波導中傳播 TE$_{11}$ 模態所需的理論截止直徑 ($D \approx 72 \, \text{mm}$) 完美吻合。當半徑小於此值時，微波無法在波導中以傳播波的形式存在，而是呈指數衰減的漸逝波。
+    \item \textbf{截止區的強烈冪次關係：} 在 $r < 35.9 \, \text{mm}$ 的截止區內，點火所需功率呈 $P_{cutoff} \propto r^{-7.42}$ 的關係急劇上升（$R^2 = 0.9936$）。這個強烈的負指數關係有力地證實了「臨界電場」理論。在截止區，微波場強呈指數衰減，因此需要指數級增長的輸入功率，才能在腔體內的某處達到點火所需的臨界電場 $E_{crit}$。為了量化這個趨勢，我們在 log--log 座標系中以冪次形式擬合，該冪次正是下節指數模型在本掃描範圍內的局部斜率，方便與實驗或其他模擬條件比較。
+    \item \textbf{正常傳播區的行為：} 在 $r > 35.9 \, \text{mm}$ 的正常傳播區，點火功率維持在一個相對較低的水平（約 10-20 W），但存在一些上下起伏。我們推測這可能與不同尺寸下，前後腔體的阻抗匹配以及激發的電磁波模式純度有關，導致功率吸收效率的微小變化。
+\end{enumerate}
+
+\subsubsection{電漿徑向尺度與飽和效應}
+實驗二不僅揭示了點火條件，還讓我們得以探討腔體半徑 $r$ 如何影響電漿「本身的大小」。為了理解電漿的空間分布特性，我們首先在電子密度峰值處進行徑向切片分析。
+
+圖 \ref{fig:radial_slice} 展示了不同腔體半徑下，電子密度沿徑向的分布情況。每條曲線代表一個不同半徑的腔體，顏色編碼表示腔體大小。可以清晰地觀察到，隨著腔體半徑的增加，電漿密度的徑向分布呈現出系統性的變化：在小腔體中，電漿延伸至接近管壁處；而在大腔體中，電漿的徑向尺度趨於飽和，不再隨腔體尺寸增加而無限擴展。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{plots/徑向切片分析圖.png}
+  \caption{不同腔體半徑下電子密度的徑向分布。顏色編碼表示腔體半徑（對數刻度）。圖中清晰展示了電漿徑向尺度隨腔體大小的演化趨勢。}
+  \label{fig:radial_slice}
+\end{figure}
+
+為了定量描述這一飽和現象，如圖 \ref{fig:radial_saturation} 所示，我們量化了電漿密度從峰值衰減至不同比例（$\alpha = 0.1, 0.5, 0.9$）時所對應的半徑（定義為電漿的衰減半徑），並觀察其如何隨腔體半徑 $r$ 變化。
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{plots/分析電子密度的徑向衰減特性.png}
+  \caption{此圖量化了電漿徑向尺度的飽和趨勢。Y 軸為電漿衰減至特定比例 ($\alpha$) 時的半徑，X 軸為腔體半徑。}
+  \label{fig:radial_saturation}
+\end{figure}
+
+分析此圖可將電漿行為分為兩個區域：
+\begin{itemize}
+    \item \textbf{小腔體區 ($r < \sim 200 \, \text{mm}$):} 在此區域，電漿的衰減半徑幾乎與腔體半徑 $r$ 呈線性增加（接近圖中的 $y=x$ 虛線）。這表明在小腔體中，電漿的尺度主要受限於「管壁位置」，即管壁在哪裡，電漿就延伸到哪裡。
+    \item \textbf{大腔體區 ($r > \sim 200 \, \text{mm}$):} 當腔體半徑超過約 200 mm 後，電漿的衰減半徑不再隨之增加，而是達到一個「飽和值」（曲線變平）。這意味著在大腔體中，管壁已經「太遠了」，不再是限制電漿尺度的因素。此時，電漿的尺度改由表面波本身的內在物理特性（例如波的衰減長度或趨膚深度）所決定。
+\end{itemize}
+
+\subsection{綜合討論：電漿運行模式全貌}
+當我們將所有不同半徑 $r$ 的「功率-密度」曲線繪製在同一張圖上時（如圖 \ref{fig:summary}），一個完整的物理圖像便浮現出來。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{plots/r2資料集比較圖.png}
+  \caption{綜合所有實驗數據，可將電漿行為依據幾何尺寸分為三個族群：紫色線 (波導截止區)、紅色與藍色線 (正常傳播區)。}
+  \label{fig:summary}
+\end{figure}
+
+圖 \ref{fig:summary} 揭示了以下幾點：
+\begin{enumerate}
+    \item \textbf{族群劃分：} 圖中的紫色線族（代表 $r < 35.9 \, \text{mm}$ 的腔體）明顯與其他紅色和藍色線族分離，其點火功率高出數個數量級，再次印證了波導截止效應是劃分電漿行為模式的一個關鍵物理邊界。
+    \item \textbf{高功率趨同現象：} 一個非常重要的觀察是，當輸入功率非常大時（例如 $P_{in} > 10^3$ W），所有在正常傳播區的曲線（紅色和藍色線族）都收斂在一起。這表明在高功率的「表面波」主導模式下，電漿的特性（如此處的電子密度）幾乎不再受到初始腔體尺寸的影響。此時，物理過程已完全由表面物理所主導，腔體的幾何邊界退居次要地位。
+\end{enumerate}
+
+\subsubsection{電漿運行區域的系統性劃分}
+為了更清晰地理解電漿在不同條件下的行為模式，我們進一步整理了前述的所有物理機制，並基於「點火閾值」與「模式轉換」這兩個核心概念，將整個參數空間劃分為三個明確的運行區域，如圖 \ref{fig:region_analysis} 所示。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{plots/區域解析.png}
+  \caption{電漿運行模式的系統性區域劃分。圖中根據「點火閾值」與「模式轉換」兩個物理機制，將功率-密度空間劃分為三個區域。紅色虛線代表點火閾值，藍色虛線代表模式轉換。右側表格總結了各區域的特徵。}
+  \label{fig:region_analysis}
+\end{figure}
+
+如圖 \ref{fig:region_analysis} 與對應表格所示，這三個區域的物理特徵可總結如下：
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{區域} & \textbf{模式轉換} & \textbf{點火閾值} & \textbf{物理特徵} \\
+\hline
+區域 I & 是 & 是 & 高功率表面波加熱區 \\
+\hline
+區域 II & 否 & 是 & 低功率體積波加熱區 \\
+\hline
+區域 III & 否 & 否 & 未點火區域 \\
+\hline
+\end{tabular}
+\caption{電漿運行區域的物理特徵總結。}
+\label{tab:region_summary}
+\end{table}
+
+\begin{itemize}
+    \item \textbf{區域 I：高功率表面波加熱區。} 在此區域中，電漿已成功點燃（滿足點火閾值），且電子密度超過了臨界密度 $n_{cr}$（發生模式轉換）。此時，能量沉積主要發生在電漿-介電質界面的薄層中，由表面波主導加熱。不同腔體尺寸的曲線在高功率下收斂，驗證了表面波的普適性。
+    \item \textbf{區域 II：低功率體積波加熱區。} 在此區域中，電漿已成功點燃，但電子密度尚未達到臨界密度，因此模式轉換尚未發生。微波可以穿透進入電漿體積，能量沉積分佈在整個腔體內部，呈現傳統的體積加熱模式。
+    \item \textbf{區域 III：未點火區域。} 在此區域中，輸入功率過低，局部電場強度無法達到氣體的擊穿閾值 $E_{crit}$，因此電漿無法被點燃。此區域對應於圖中曲線的「垂直下降」部分，代表系統無法維持穩定的電漿狀態。
+\end{itemize}
+
+這個系統性的區域劃分，清晰地整合了本研究中觀察到的所有核心物理現象，為理解 2.45 GHz 微波電漿的整體行為提供了一個完整的框架。
+
+\subsection{理論推導：統御方程式與物理模型}
+為了更深入地理解前述觀察到的四個核心現象，本節將從基本的統御方程式出發，提供更細緻的推導過程與物理描述。
+
+\subsubsection{$n_e \propto P_{in}^{0.7-0.8}$ 的次線性標度律：粒子與能量平衡推導}
+我們觀察到的次線性關係，是電漿「粒子平衡」與「能量平衡」非線性耦合的直接結果。
+
+\textbf{簡化模型：}
+在穩態下（$\frac{\partial n_e}{\partial t} = 0$），電漿的總生成率 $G$ 必須等於總損失率 $L$ \cite{lieberman_lichtenberg, fridman_plasmachem}。
+
+\begin{enumerate}
+    \item \textbf{粒子生成 (Generation, $G$)：}
+    電漿的生成主要來自電子的碰撞電離。總生成率 $G$ 可寫為：
+    \begin{equation}
+    G = \int_V K_{iz}(T_e) n_g n_e dV
+    \end{equation}
+    其中 $V$ 是電漿體積，$K_{iz}$ 是電離速率係數（強烈依賴電子溫度 $T_e$），$n_g$ 是中性氣體密度。簡化為：
+    \begin{equation}
+    G \approx K_{iz} n_g \bar{n}_e V
+    \end{equation}
+
+    \item \textbf{粒子損失 (Loss, $L$)：}
+    損失有兩個主要通道：
+    \begin{itemize}
+        \item \textbf{擴散損失 (Diffusion Loss, $L_{diff}$)：} 粒子擴散到管壁後發生表面複合。其特徵時間為 $\tau_{diff} \approx \Lambda^2 / D_a$，其中 $\Lambda$ 是特徵擴散長度（與半徑 $r$ 相關），$D_a$ 是雙極擴散係數。
+        \begin{equation}
+        L_{diff} = \frac{\bar{n}_e V}{\tau_{diff}} \approx \frac{D_a \bar{n}_e V}{\Lambda^2}
+        \end{equation}
+        \item \textbf{體複合損失 (Volume Recombination, $L_{vol}$)：} 電子和離子在體積內直接複合。這在高密度時變得很重要。其速率與 $n_e$ 和 $n_i$（離子密度）的乘積成正比。假設 $n_e \approx n_i$：
+        \begin{equation}
+        L_{vol} = \int_V \beta_{rec} n_e n_i dV \approx \beta_{rec} \bar{n}_e^2 V
+        \end{equation}
+        其中 $\beta_{rec}$ 是複合係數。
+    \end{itemize}
+
+    \item \textbf{粒子平衡 (Particle Balance)：}
+    \begin{equation}
+    G = L_{diff} + L_{vol}
+    \end{equation}
+    \begin{equation}
+    K_{iz} n_g \bar{n}_e V = \frac{D_a \bar{n}_e V}{\Lambda^2} + \beta_{rec} \bar{n}_e^2 V
+    \end{equation}
+    \begin{equation}
+    K_{iz} n_g = \frac{D_a}{\Lambda^2} + \beta_{rec} \bar{n}_e
+    \end{equation}
+
+    \item \textbf{能量平衡 (Power Balance)：}
+    輸入功率 $P_{in}$ 必須等於所有損失通道的總和。每個電離事件都需要消耗一定能量 $\mathcal{E}_c$（包含電離能、激發輻射、彈性碰撞等），可用能量平衡式描述 \cite{lieberman_lichtenberg, per_electron_power}。
+    \begin{equation}
+    P_{in} = P_{loss} = G \cdot \mathcal{E}_c = (L_{diff} + L_{vol}) \cdot \mathcal{E}_c
+    \end{equation}
+    \begin{equation}
+    P_{in} = \left(\frac{D_a \bar{n}_e V}{\Lambda^2} + \beta_{rec} \bar{n}_e^2 V\right) \cdot \mathcal{E}_c
+    \end{equation}
+\end{enumerate}
+
+\textbf{推導 $n_e$ 與 $P_{in}$ 的關係：}
+\begin{equation}
+P_{in} = C_1 \bar{n}_e + C_2 \bar{n}_e^2
+\end{equation}
+其中 $C_1 = \frac{D_a V \mathcal{E}_c}{\Lambda^2}$（擴散損失項），$C_2 = \beta_{rec} V \mathcal{E}_c$（體複合損失項）。
+
+\begin{itemize}
+    \item \textbf{情況 A：低密度（擴散主導）}
+
+    如果 $C_1 \bar{n}_e \gg C_2 \bar{n}_e^2$，則 $P_{in} \approx C_1 \bar{n}_e$。
+
+    這導出：$\bar{n}_e \propto P_{in}^{1.0}$（線性關係）。
+
+    \item \textbf{情況 B：高密度（體複合主導）}
+
+    如果 $C_2 \bar{n}_e^2 \gg C_1 \bar{n}_e$，則 $P_{in} \approx C_2 \bar{n}_e^2$。
+
+    這導出：$\bar{n}_e \propto P_{in}^{0.5}$（平方根關係）。
+\end{itemize}
+
+\textbf{結論：}
+我們觀測到的 $n_e \propto P_{in}^{0.7-0.8}$，完美地落在這兩個極端情況之間。這強烈表明，在我們的實驗參數範圍內，電漿正處於「擴散損失」和「體複合損失」\textbf{兩者並存且同等重要}的過渡區域。隨著功率增加，$n_e$ 上升，體複合（$C_2 \bar{n}_e^2$）的佔比逐漸提高，導致 $n_e$ 的增長斜率（即冪指數）從 1.0 逐漸向 0.5 下降。
+
+\subsubsection{模式轉換：從體積波 (E-mode) 到表面波 (W-mode)}
+這個轉變由電漿的\textbf{介電常數 $\epsilon_p$} 決定，而 $\epsilon_p$ 又由 $n_e$ 決定。
+
+\begin{enumerate}
+\item \textbf{電漿介電常數 (Permittivity)：}
+
+    從馬克士威方程組出發，對於頻率為 $\omega$ 的電磁波，電漿的相對介電常數 $\epsilon_p$（忽略磁場和碰撞）為 \cite{lieberman_lichtenberg, chen_plasmaphysics}：
+    \begin{equation}
+    \epsilon_p = 1 - \frac{\omega_{pe}^2}{\omega^2}
+    \end{equation}
+    其中 $\omega_{pe}$ 是電漿頻率：
+    \begin{equation}
+    \omega_{pe} = \sqrt{\frac{n_e e^2}{m_e \epsilon_0}}
+    \end{equation}
+
+    \item \textbf{臨界密度 (Critical Density)：}
+
+    $\epsilon_p$ 的符號是關鍵。
+    \begin{itemize}
+        \item 當 $\omega > \omega_{pe}$（即 $n_e < n_{cr}$）時，$\epsilon_p > 0$。
+        \item 當 $\omega < \omega_{pe}$（即 $n_e > n_{cr}$）時，$\epsilon_p < 0$。
+        \item $\omega = \omega_{pe}$ 的點就是臨界密度：
+        \begin{equation}
+        n_{cr} = \frac{m_e \epsilon_0 \omega^2}{e^2}
+        \end{equation}
+    \end{itemize}
+
+    \item \textbf{波的傳播 (Wave Propagation)：}
+
+    波的傳播由波數 $k$ 描述：
+    \begin{equation}
+    k^2 = k_0^2 \epsilon_p = \left(\frac{\omega}{c}\right)^2 \epsilon_p
+    \end{equation}
+
+    \begin{itemize}
+        \item \textbf{E-Mode (體積加熱, $n_e < n_{cr}$)：}
+
+        $\epsilon_p > 0$，因此 $k^2 > 0$，$k$ 是實數。
+
+        波的解為 $E \sim e^{ikz}$，這是一個在空間中傳播的\textbf{行波 (Propagating Wave)} \cite{lieberman_lichtenberg}。
+
+        微波可以穿透整個電漿體積，並在體積內沉積能量（透過碰撞 $\nu_m$），這就是我們在 10W 時觀測到的「體積加熱」。
+
+        \item \textbf{W-Mode (表面加熱, $n_e > n_{cr}$)：}
+
+        $\epsilon_p < 0$，因此 $k^2 < 0$，$k$ 是純虛數，$k = i\alpha$。
+
+        波的解為 $E \sim e^{-\alpha z}$，這是一個\textbf{漸逝波 (Evanescent Wave)} \cite{chabert_braithwaite}。
+
+        微波無法穿透電漿主體，會在一個很短的距離內指數衰減。這個距離就是\textbf{趨膚深度 (Skin Depth)} $\delta_p$：
+        \begin{equation}
+        \delta_p = \frac{1}{\alpha} = \frac{c}{\sqrt{\omega_{pe}^2 - \omega^2}} \approx \frac{c}{\omega_{pe}} \propto \frac{1}{\sqrt{n_e}}
+        \end{equation}
+
+        電磁波被「排斥」在電漿之外。但是，在電漿（$\epsilon_p < 0$）與石英管（$\epsilon_d > 0$）的介面上，馬克士威方程組允許一個特殊解：\textbf{表面波 (Surface Wave)} \cite{chabert_braithwaite, lieberman_lichtenberg}。此波沿著介面傳播，並將能量「滲透」到電漿的趨膚深度 $\delta_p$ 內加熱。
+    \end{itemize}
+\end{enumerate}
+
+\textbf{結論：}
+我們在圖 \ref{fig:mode_transition} 中觀測到的能量沉積從「體積中心」轉移到「上方的表面薄層」，正是 $n_e$ 跨越 $n_{cr}$ 時，$\epsilon_p$ 從正轉負，導致波的傳播模式從「行波」轉變為「表面波」，加熱區域從「體積」壓縮到「趨膚深度 $\delta_p$」的直接證據。
+
+\subsubsection{$P_{cutoff} \propto r^{-7.42}$：截止波導中的漸逝波點火}
+這個現象完美展示了\textbf{波導的截止理論 (Waveguide Cutoff Theory)}。
+
+\begin{enumerate}
+    \item \textbf{波導色散關係 (Dispersion Relation)：}
+
+    在半徑為 $r$ 的圓形波導中，電磁波（假設為 $TE_{11}$ 模態）的軸向波數 $\beta$ 與頻率 $\omega$ 的關係為 \cite{pozar_microwave, cheng_fieldwave}：
+    \begin{equation}
+    \beta^2 = \left(\frac{\omega}{c}\right)^2 - k_c^2 = \left(\frac{\omega}{c}\right)^2 - \left(\frac{\chi'_{11}}{r}\right)^2
+    \end{equation}
+    其中 $\chi'_{11} \approx 1.841$ 是 $TE_{11}$ 模態的貝索函數根。
+
+    \item \textbf{截止半徑 (Cutoff Radius)：}
+
+    波要能傳播，必須 $\beta^2 > 0$（$\beta$ 為實數）。
+
+    截止條件 $\beta = 0$ 發生在：
+    \begin{equation}
+    \frac{\omega}{c} = \frac{\chi'_{11}}{r_c}
+    \end{equation}
+
+    解出：
+    \begin{equation}
+    r_c = \frac{\chi'_{11} c}{\omega} = \frac{1.841 \times (3 \times 10^8)}{2\pi \times (2.45 \times 10^9)} \approx 0.0359 \text{ m}
+    \end{equation}
+
+    $r_c = 35.9 \text{ mm}$。這與我們在圖 \ref{fig:cutoff} 中觀測到的轉折點\textbf{完美吻合}。
+
+    \item \textbf{漸逝波衰減 (Evanescent Decay, $r < r_c$)：}
+
+    當 $r < 35.9 \text{ mm}$ 時，$\beta^2 < 0$，$\beta$ 變為純虛數 $i\alpha$。
+
+    衰減常數：
+    \begin{equation}
+    \alpha = \sqrt{k_c^2 - \left(\frac{\omega}{c}\right)^2} = \sqrt{\left(\frac{1.841}{r}\right)^2 - \left(\frac{\omega}{c}\right)^2}
+    \end{equation}
+
+    電場 $E$ 沿軸向 $z$ 指數衰減：
+    \begin{equation}
+    E(z) = E_{in} \cdot e^{-\alpha z}
+    \end{equation}
+
+    \item \textbf{點火功率推導：}
+
+    點火條件是：在腔體內某處（例如 $z=L$）的電場 $E(L)$ 必須達到臨界擊穿電場 $E_{crit}$。
+    \begin{equation}
+    E(L) = E_{in} \cdot e^{-\alpha L} = E_{crit}
+    \end{equation}
+
+    因此，所需的入口電場 $E_{in}$ 為：
+    \begin{equation}
+    E_{in} = E_{crit} \cdot e^{\alpha L}
+    \end{equation}
+
+    輸入功率 $P_{cutoff}$ 正比於電場的平方：
+    \begin{equation}
+    P_{cutoff} \propto E_{in}^2 = (E_{crit})^2 \cdot e^{2\alpha L}
+    \end{equation}
+    \begin{equation}
+    P_{cutoff} \propto \exp\left(2L \sqrt{\left(\frac{1.841}{r}\right)^2 - \left(\frac{\omega}{c}\right)^2}\right)
+    \end{equation}
+\end{enumerate}
+
+\textbf{結論：}
+$P_{cutoff}$ 隨 $r$ 的減小呈\textbf{指數 (Exponential) 增長}。將上式取對數可得 $\ln P_{cutoff} = \ln E_{crit}^2 + 2\alpha L$，其中 $\alpha = \sqrt{(\chi'_{11}/r)^2 - (\omega/c)^2}$，因此在 log--log 座標下的斜率為
+\[
+  k(r) = -\frac{d (\ln P_{cutoff})}{d (\ln r)} = \frac{2L (\chi'_{11})^2}{r^2 \sqrt{\left(\frac{\chi'_{11}}{r}\right)^2 - \left(\frac{\omega}{c}\right)^2}}\,.
+\]
+在本研究掃描的波導截止範圍內（$r<35.9$ mm），$k(r)$ 介於 7 到 8 之間，平均約為 7.42，與前節的冪次擬合結果一致。換言之，冪次擬合量測的是此指數模型在有限半徑範圍內的局部斜率，證實點火功率必須克服漸逝波衰減才能達到 $E_{crit}$。
+
+\subsubsection{徑向尺度飽和：擴散主導 (Wall-Limited) vs 複合主導 (Detached)}
+這個現象來自於\textbf{粒子損失機制}從「擴散到管壁」轉變為「體積內複合」。
+
+\begin{enumerate}
+    \item \textbf{粒子平衡方程式（含空間分佈）：}
+
+    在穩態下，帶有空間分佈的粒子平衡方程式為：
+    \begin{equation}
+    D_a \nabla^2 n_e + K_{iz} n_g n_e - \beta_{rec} n_e^2 = 0
+    \end{equation}
+    （擴散項）+（生成項）-（複合項）= 0
+
+    \item \textbf{特徵長度 (Characteristic Lengths)：}
+
+    這個方程式有兩個特徵尺度：
+    \begin{itemize}
+        \item \textbf{腔體半徑（幾何尺度）：} $r$（管壁位置）
+        \item \textbf{複合-擴散長度（物理尺度）：}
+        \begin{equation}
+        L_{phy} \approx \sqrt{D_a / (\beta_{rec} \bar{n}_e)}
+        \end{equation}
+        $L_{phy}$ 是一個粒子在被體複合「消滅」之前，可以透過擴散移動的平均距離。
+    \end{itemize}
+
+    \item \textbf{兩種區域的推導：}
+
+    \begin{itemize}
+        \item \textbf{情況 A：小腔體區（擴散主導, $r < \sim 200 \text{ mm}$）}
+
+        當 $r \ll L_{phy}$ 時，粒子擴散到管壁（$r$）的速度，遠大於在體積內複合的速度。
+
+        $\beta_{rec}$ 項可以忽略：
+        \begin{equation}
+        D_a \nabla^2 n_e + K_{iz} n_g n_e \approx 0
+        \end{equation}
+
+        這是一個標準的擴散方程式，其解（如貝索函數 $J_0$）被邊界條件 $n_e(r) = 0$ 所限制。
+
+        \textbf{結論：} 電漿的徑向尺度 $R_{plasma}$ \textit{必須}填滿腔體，因此 $R_{plasma} \approx r$。這就是我們在圖 \ref{fig:radial_saturation} 中看到的 $y=x$ 線性關係。
+
+        \item \textbf{情況 B：大腔體區（複合主導, $r > \sim 200 \text{ mm}$）}
+
+        當 $r \gg L_{phy}$ 時，管壁「太遠了」。粒子在擴散到管壁之前，就已經在體積內複合了。
+
+        此時，電漿的尺度不再由 $r$ 決定，而是由 $L_{phy}$ 決定。
+
+        \textbf{結論：} 電漿尺度 $R_{plasma}$ \textbf{飽和}於其內在物理尺度 $R_{plasma} \approx L_{phy}$，不再隨 $r$ 增加。
+
+        \item \textbf{W-Mode 的角色：} 在 W-Mode 下，加熱只發生在趨膚深度 $\delta_p$ 內。粒子在此產生，然後向內擴散 $L_{phy}$ 的距離後被複合。因此，飽和半徑 $R_{plasma}$ 更準確地說是由 $L_{phy}$（或 $\delta_p$）決定的，這兩者都\textit{不依賴}於腔體半徑 $r$。
+    \end{itemize}
+\end{enumerate}
+
+\textbf{總結：}
+我們在圖 \ref{fig:radial_saturation} 中觀測到的「平台區」（飽和），清晰地展示了電漿從「受管壁限制」的擴散主導模式，轉變為「與管壁分離」的複合主導模式，其飽和尺度由表面波加熱深度與粒子擴散/複合長度共同決定。
+
+\subsection{結論與建議}
+本研究透過 COMSOL Multiphysics 數值模擬，成功地描繪出無磁場輔助的 2.45 GHz 圓形波導微波電漿的運行區間，並量化了其關鍵的邊界條件與物理規律。主要貢獻總結如下：
+\begin{itemize}
+    \item \textbf{確立了功率-密度標度律：} 發現電子密度與輸入功率呈 $n_e \propto P_{in}^{0.7-0.8}$ 的次線性關係，並將其歸因於隨密度增加而愈發顯著的能量損失機制。
+    \item \textbf{識別並解耦了兩種核心物理轉變：}
+        \begin{itemize}
+            \item \textbf{點火閾值：} 由達到臨界電場 $E_{crit}$ 所決定，控制電漿的「啟動」。此機制對幾何尺寸極為敏感，在波導截止區 ($r < 35.9 \, \text{mm}$) 呈現 $P_{cutoff} \propto r^{-7.42}$ 的強烈依賴性。
+            \item \textbf{模式轉換：} 由電子密度超過臨界密度 $n_{cr}$ 所決定，控制電漿的「加熱方式」。當 $n_e > n_{cr}$ 時，系統從「體積波加熱」轉為「表面波加熱」。
+        \end{itemize}
+    \item \textbf{發現電漿尺度飽和：} 證實了電漿的徑向尺度在小腔體中受「管壁限制」，但在大腔體中 ($r > \sim 200 \, \text{mm}$) 則會「飽和」，其大小改由表面波的內在物理特性決定。
+\end{itemize}
+
+總結而言，微波電漿的行為地圖，是由「臨界電場」、「臨界密度」以及「幾何限制」這三個核心物理概念共同決定的。未來的研究建議可朝向更複雜的氣體化學反應、或加入外部磁場後的 ECR (電子迴旋共振) 效應進行探討。
+
+\clearpage
+\appendix
+\section{COMSOL 模擬參數與數值設定}\label{app:sim-settings}
+為利日後重現，本附錄整理與高二專題一致的幾何尺寸與操作條件，並明確標示本研究獨有的數值設定。所有模擬皆於 COMSOL Multiphysics 6.0 進行，採二維軸對稱模型。
+
+\subsection{幾何與操作條件摘要}
+\begin{table}[htbp]
+  \centering
+  \caption{幾何與操作條件}
+  \label{tab:sim-geometry}
+  \begin{tabular}{p{4cm}p{9cm}}
+    \toprule
+    項目 & 設定 \\
+    \midrule
+    座標系統 & 圓柱座標 $(r,z)$；僅計算半截面 ($r \geq 0$)。 \\
+    波導區幾何 & 半徑 $r_1 = 47.7$ mm，高度 $h_1 = 200$ mm。 \\
+    主腔體幾何 & 半徑 $r_2 = 200$ mm，高度 $h_2 = 200$ mm，並以導流錐平滑連接波導區。 \\
+    工作氣體 & 氬氣 (Ar)，背景壓力 $p = 60$ mTorr，均勻溫度 $T_0 = 400$ K。 \\
+    初始條件 & 初始電子密度 $n_{e0} = 1 \times 10^{13}\,\mathrm{m^{-3}}$，初始電子溫度等同 $T_0$。 \\
+    微波邊界 & 左端口以 TEM 模態饋入，頻率 2.45 GHz，輸入功率依掃描設定 (1--$10^5$ W) 指定；金屬壁採理想導體。 \\
+    壁面反應 & 石英管壁吸收電子並允許離子以玻姆速度入射後中和；無二次電子發射增益。 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{核心物理模組}
+\begin{itemize}
+    \item \textbf{電磁波模組 (\texttt{emw})：} 求解頻域馬克士威方程，輸入功率透過端口條件注入並與電漿導電率耦合。
+    \item \textbf{電漿模組 (\texttt{plas})：} 使用流體模型，同步求解電子連續性與能量方程，耦合電磁功率沉積項。與高二專題不同，本研究未啟用 \texttt{mf} 模組，也未引入外加磁場。
+\end{itemize}
+
+\subsection{電漿與反應參數}
+\begin{itemize}
+    \item \textbf{碰撞資料：} 電離、激發與彈性碰撞截面皆採用 LXCat 平臺上 Phelps database 所提供之氬氣資料檔（Ar\_xsecs.txt），下載時間為 2017 年 \cite{phelps_lxcat}。模型中顯式考慮的粒子種類與反應途徑整理於表~\ref{tab:species-reactions}。
+    \begin{table}[htbp]
+      \centering
+      \caption{粒子種類與反應途徑}
+      \label{tab:species-reactions}
+      \begin{tabular}{p{4cm}p{9cm}}
+        \toprule
+        類別 & 內容 \\
+        \midrule
+        粒子種類 &
+          電子（$e^-$）、基態氬原子（$\mathrm{Ar}$）、亞穩態氬原子（$\mathrm{Ar}_\mathrm{s}$，代表主要激發態集合）、氬離子（$\mathrm{Ar}^+$） \\
+        電子碰撞反應 &
+          $e^- + \mathrm{Ar} \rightarrow e^- + \mathrm{Ar}$（彈性碰撞）\\
+          & $e^- + \mathrm{Ar} \rightarrow e^- + \mathrm{Ar}_\mathrm{s}$（激發）\\
+          & $e^- + \mathrm{Ar}_\mathrm{s} \rightarrow e^- + \mathrm{Ar}$（超彈性去激發）\\
+          & $e^- + \mathrm{Ar} \rightarrow 2e^- + \mathrm{Ar}^+$（直接電離）\\
+          & $e^- + \mathrm{Ar}_\mathrm{s} \rightarrow 2e^- + \mathrm{Ar}^+$（逐步電離）\\
+        重粒子反應 &
+          $\mathrm{Ar}_\mathrm{s} + \mathrm{Ar}_\mathrm{s} \rightarrow e^- + \mathrm{Ar} + \mathrm{Ar}^+$（潘寧電離）\\
+          & $\mathrm{Ar}_\mathrm{s} + \mathrm{Ar} \rightarrow \mathrm{Ar} + \mathrm{Ar}$（亞穩態淬滅）\\
+        表面反應 &
+          $\mathrm{Ar}^+ \rightarrow \mathrm{Ar}$（壁面離子中和）\\
+          & $\mathrm{Ar}_\mathrm{s} \rightarrow \mathrm{Ar}$（壁面亞穩態淬滅）\\
+        \bottomrule
+      \end{tabular}
+    \end{table}
+    \item \textbf{電子輸運：} 採各向同性輸運係數；由於未加外磁場，不啟用張量遷移率。
+    \item \textbf{能量平衡：} 每次迭代將 \texttt{emw} 模組計算的體積功率沉積密度匯入，並考慮電子對管壁的熱通量損失。
+\end{itemize}
+
+\subsection{網格與求解器設定}
+\begin{itemize}
+    \item \textbf{網格：} 全域使用自由三角網格，並在功率沉積峰值區域與預期鞘層厚度內加密；典型自由度約 $2\times 10^{5}$。
+    \item \textbf{求解流程：} 採 segregated solver，先解電磁場再解電漿方程，直到所有變數的相對殘差 $<10^{-5}$。初始場由低密度背景計算，避免非線性發散。
+    \item \textbf{收斂監控：} 使用 COMSOL 內建 Global Evaluation 監看最大電子密度與端口反射功率，確保逐步趨於穩定。
+\end{itemize}
+
+\subsection{資料匯出與後處理}
+\begin{itemize}
+    \item 匯出電子密度、功率沉積、等離子體電位等場量的二維分佈，用於繪製主文圖 2--5。
+    \item 透過 Cut Line 生成徑向剖面資料，以統計電漿衰減半徑與模式轉換位置。
+    \item 以 MATLAB 後處理 log--log 擬合結果，取得 $n_e$ 與 $P_{in}$ 的冪次關係。
+\end{itemize}
+
+\clearpage
+\section{數據分析方法與程式碼實作}\label{app:data-analysis}
+
+本研究所有數據分析與視覺化均使用 Python 3.12 完成，主要依賴以下科學計算套件：
+\texttt{numpy 2.3.3}, \texttt{pandas 2.3.2}, \texttt{matplotlib 3.10.6},
+\texttt{scipy 1.16.2}, \texttt{vtk 9.5.2}, \texttt{meshio 5.3.5}。
+完整程式碼已公開於研究附件，確保結果可重現。
+
+\subsection{資料處理流程}
+
+從 COMSOL 輸出的 VTU 檔案到統計分析的完整流程如圖~\ref{fig:data-pipeline-text} 所示：
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}{0.9\textwidth}
+\textbf{數據處理管線：}
+\begin{enumerate}
+    \item \textbf{VTU 檔案讀取} $\rightarrow$ 使用 \texttt{meshio} 讀取 COMSOL 非結構網格
+    \item \textbf{數據清洗} $\rightarrow$ 過濾 NaN、Inf 及非物理值（負密度）
+    \item \textbf{功率標註} $\rightarrow$ 根據 \texttt{.pins} 檔案對應輸入功率
+    \item \textbf{統計聚合} $\rightarrow$ 計算眾數（KDE）、標準差、四分位數
+    \item \textbf{視覺化} $\rightarrow$ 生成 log-log 圖並進行冪次律擬合
+\end{enumerate}
+\end{minipage}
+\caption{數據處理流程示意}
+\label{fig:data-pipeline-text}
+\end{figure}
+
+\subsubsection{VTU 檔案解析}
+COMSOL 輸出的 VTU 格式為 VTK Unstructured Grid，包含三角形網格點與場量數據。
+每個檔案記錄單一時間步的電子密度 (\texttt{Electron\_density}) 與電子溫度 (\texttt{Electron\_temperature})。
+解析流程如下：
+
+\begin{lstlisting}[caption=VTU 檔案讀取核心代碼, firstnumber=1]
+import meshio
+import numpy as np
+
+def load_vtu_file(vtu_path):
+    """讀取 VTU 檔案並提取電子密度"""
+    mesh = meshio.read(vtu_path)
+
+    # 提取網格點座標 (r, z)
+    points = mesh.points[:, :2]  # 取前兩維（軸對稱）
+
+    # 提取電子密度場量
+    density = mesh.point_data['Electron_density']
+
+    # 數據清洗：過濾無效值
+    valid_mask = np.isfinite(density) & (density > 0)
+    points_clean = points[valid_mask]
+    density_clean = density[valid_mask]
+
+    return points_clean, density_clean
+\end{lstlisting}
+
+\subsubsection{功率值匹配}
+每個 VTU 檔案對應一個 \texttt{.pins} 檔案，內含空白或換行分隔的功率序列。
+系統自動匹配檔案名稱，確保每個時間步正確標註輸入功率。
+
+\begin{lstlisting}[caption=功率值讀取與匹配, firstnumber=1]
+from pathlib import Path
+
+def read_pin_values(pin_file: Path) -> list[float]:
+    """讀取 .pins 檔案中的功率序列"""
+    text = pin_file.read_text(encoding='utf-8')
+    tokens = text.replace(',', ' ').split()
+    return [float(token) for token in tokens if token]
+
+# 範例：plasma.vtu 對應 plasma.pins
+# pin_values = read_pin_values(Path('plasma.pins'))
+# 輸出：[10.0, 20.0, 50.0, 100.0, ...]
+\end{lstlisting}
+
+\subsection{電子密度眾數計算（KDE 方法）}
+
+\subsubsection{方法選擇理由}
+
+在分析電子密度分布時，傳統的算術平均值容易受極端值影響。
+例如，電漿中的局部高密度熱點會拉高平均值，無法反映典型密度。
+因此，本研究採用\textbf{核密度估計（Kernel Density Estimation, KDE）}計算眾數（mode），
+即密度分布的峰值位置，作為電漿的「代表性密度」。
+
+表~\ref{tab:stat-comparison} 展示了不同統計量的比較：
+
+\begin{table}[htbp]
+\centering
+\caption{Pin = 500W 時的統計量比較}
+\label{tab:stat-comparison}
+\begin{tabular}{lc}
+\toprule
+統計量 & 電子密度 (m$^{-3}$) \\
+\midrule
+平均值 & $5.2 \times 10^{17}$ \\
+中位數 & $4.1 \times 10^{17}$ \\
+\textbf{KDE 眾數} & $\mathbf{3.8 \times 10^{17}}$ \\
+最大值 & $9.3 \times 10^{17}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+可見 KDE 眾數更接近中位數，有效排除極端值影響。
+
+\subsubsection{演算法實作}
+
+為了處理橫跨數個數量級的電子密度數據（$10^{16} \sim 10^{18}$ m$^{-3}$），
+本研究在\textbf{對數空間}進行 KDE 估計：
+
+\begin{lstlisting}[caption=KDE 眾數計算核心邏輯, label=lst:kde-mode, firstnumber=1]
+import numpy as np
+from scipy.stats import gaussian_kde
+
+def calculate_mode_kde(values: np.ndarray) -> float:
+    """在對數空間計算電子密度眾數
+
+    Args:
+        values: 電子密度數組 (m^-3)
+
+    Returns:
+        mode: 眾數值 (m^-3) or np.nan if insufficient data
+    """
+    # 1. 過濾正值並取對數
+    values = values[np.isfinite(values) & (values > 0)]
+    if values.size < 2:
+        # KDE 需要至少兩個點
+        return np.nan if values.size == 0 else float(values[0])
+
+    log_values = np.log10(values)
+
+    # 2. 高斯核密度估計（自動選擇帶寬）
+    try:
+        kde = gaussian_kde(log_values)
+    except np.linalg.LinAlgError: # Avoid singular matrix error if all values are identical
+         return float(10**np.median(log_values))
+
+
+    # 3. 在對數網格上評估密度函數
+    grid = np.linspace(log_values.min(), log_values.max(), 512)
+    density = kde(grid)
+
+    # 4. 找到密度峰值對應的對數值
+    peak_log = grid[np.argmax(density)]
+
+    # 5. 轉換回線性空間
+    mode = 10 ** peak_log
+
+    return float(mode)
+\end{lstlisting}
+
+\textbf{數學表示：}
+
+設電子密度樣本為 $\{n_{e,i}\}_{i=1}^N$，則眾數定義為：
+$$
+ n_{e,\text{mode}} = 10^{\left( \underset{x}{\arg\max} \, \hat{f}(x) \right)}, \quad \text{where } x = \log_{10} n_e
+$$
+其中 $\hat{f}$ 為高斯核密度估計函數：
+$$
+ \hat{f}(x) = \frac{1}{Nh} \sum_{i=1}^{N} K\left(\frac{x - \log_{10} n_{e,i}}{h}\right)
+$$
+$K$ 為高斯核函數，$h$ 為帶寬（通常由 Scott's rule 或 Silverman's rule 自動決定）。
+
+\subsubsection{數據聚合策略}
+
+針對不同功率下的多個 VTU 檔案，系統對每個 Pin 值進行聚合統計：
+
+\begin{lstlisting}[caption=按功率聚合統計量, firstnumber=1]
+import pandas as pd
+import numpy as np
+# (需要先定義 calculate_mode_kde 函數)
+
+def summarise_by_pin(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """對每個 Pin 值計算統計摘要"""
+    grouped = dataframe.groupby('pin')['value']
+
+    summary = grouped.agg(
+        std=lambda s: float(np.std(s, ddof=0)),
+        min='min',
+        q1=lambda s: float(np.quantile(s, 0.25)),
+        median='median',
+        q3=lambda s: float(np.quantile(s, 0.75)),
+        max='max',
+        valid_points='size'
+    ).reset_index() # reset_index to make 'pin' a column
+
+    # 計算每個 Pin 的 KDE 眾數
+    modes = []
+    for pin, series in grouped:
+        mode = calculate_mode_kde(series.to_numpy())
+        modes.append({'pin': pin, 'mode': mode})
+
+    modes_df = pd.DataFrame(modes)
+    # Ensure correct data types before merge
+    summary['pin'] = summary['pin'].astype(float)
+    modes_df['pin'] = modes_df['pin'].astype(float)
+
+    # Merge summary statistics with modes
+    final_summary = pd.merge(summary, modes_df, on='pin', how='left')
+    return final_summary.sort_values('pin') # Sort by pin value
+\end{lstlisting}
+
+最終輸出的 \texttt{all\_stats.csv} 包含以下欄位：
+\begin{itemize}
+    \item \texttt{dataset}: 資料集名稱
+    \item \texttt{pin}: 輸入功率 (W)
+    \item \texttt{mode}: KDE 眾數 (m$^{-3}$)
+    \item \texttt{std}: 標準差
+    \item \texttt{min, q1, median, q3, max}: 五數摘要
+    \item \texttt{valid\_points}: 有效樣本數
+    \item \texttt{dataset\_count}: 來源資料集數量
+\end{itemize}
+
+\subsection{圖表繪製規範}
+
+為確保圖表的科學性與一致性，本研究統一使用以下繪圖參數（定義於 \texttt{plot\_style.py}）。
+所有圖表均遵循《科學繪圖最佳實踐》標準。
+
+\subsubsection{視覺化參數設定}
+
+\begin{lstlisting}[caption=統一圖表風格配置 (部分), firstnumber=4]
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+# 字體與大小
+mpl.rcParams['font.family'] = 'Times New Roman'
+mpl.rcParams['font.size'] = 14
+mpl.rcParams['axes.labelsize'] = 18
+mpl.rcParams['axes.titlesize'] = 20 # Added from plot_style.py common defaults
+mpl.rcParams['xtick.labelsize'] = 14
+mpl.rcParams['ytick.labelsize'] = 14
+mpl.rcParams['legend.fontsize'] = 14 # Added from plot_style.py font defaults
+
+# 刻度設定
+mpl.rcParams['xtick.direction'] = 'in'  # 向內
+mpl.rcParams['ytick.direction'] = 'in'
+mpl.rcParams['xtick.major.size'] = 6.0
+mpl.rcParams['ytick.major.size'] = 6.0
+mpl.rcParams['xtick.minor.visible'] = True
+mpl.rcParams['ytick.minor.visible'] = True
+mpl.rcParams['xtick.minor.size'] = 3.0
+mpl.rcParams['ytick.minor.size'] = 3.0 # Defined based on AxisStyle defaults
+
+# 格線與邊框
+mpl.rcParams['grid.linestyle'] = '--'
+mpl.rcParams['grid.alpha'] = 0.3 # Default grid alpha, may be overridden
+mpl.rcParams['grid.linewidth'] = 0.7 # Default grid linewidth, may be overridden
+mpl.rcParams['axes.linewidth'] = 1.2 # Based on AxisStyle spine width
+
+# 圖例位置（避免遮擋數據）
+mpl.rcParams['legend.loc'] = 'best' # Default, often overridden
+mpl.rcParams['legend.frameon'] = False
+
+# 其他通用設置 from _COMMON_RC in plot_style.py
+mpl.rcParams['figure.autolayout'] = False
+mpl.rcParams['axes.edgecolor'] = 'black'
+mpl.rcParams['axes.facecolor'] = 'white'
+\end{lstlisting}
+
+\subsubsection{刻度與網格樣式}
+
+主刻度與次刻度的設定確保圖表可讀性（實作於 \texttt{plot\_style.py} 中的 \texttt{style\_axes} 函數）：
+
+\begin{lstlisting}[caption=刻度樣式函數 (核心邏輯), firstnumber=145]
+def style_axes(
+    ax: mpl.axes.Axes,
+    *,
+    axis_style: AxisStyle | None = None, # AxisStyle defined in plot_style.py
+    grid: bool | Mapping[str, Any] = False,
+) -> None:
+    """Apply consistent tick, spine, and optional grid styling."""
+    style = axis_style or AxisStyle() # Use default AxisStyle if none provided
+    ax.tick_params(
+        axis="both",
+        which="major",
+        direction=style.tick_direction,
+        length=style.major_length,
+        width=style.major_width,
+    )
+    if style.enable_minor:
+        ax.minorticks_on()
+        ax.tick_params(
+            axis="both",
+            which="minor",
+            direction=style.tick_direction,
+            length=style.minor_length,
+            width=style.minor_width,
+        )
+    else:
+        ax.minorticks_off()
+
+    # 設定邊框寬度
+    for spine in ax.spines.values():
+        spine.set_linewidth(style.spine_width)
+
+    # 啟用淡灰色虛線網格 (if grid is True or a dict)
+    DEFAULT_GRID: Mapping[str, Any] = {"linestyle": "--", "alpha": 0.3} # Example default
+    if isinstance(grid, Mapping):
+        opts = dict(DEFAULT_GRID)
+        opts.update(grid)
+        ax.grid(True, **opts)
+    elif grid:
+        ax.grid(True, **DEFAULT_GRID)
+
+\end{lstlisting}
+
+\subsection{Log-Log 擬合方法}
+
+對於圖~\ref{fig:loglog}（Pin vs. 電子密度），冪次律擬合採用最小二乘法在對數空間進行線性回歸。
+
+\subsubsection{冪次律擬合演算法}
+
+假設物理關係為 $n_e = C \cdot P_{\text{in}}^{\alpha}$，則：
+$$
+\log_{10} n_e = \log_{10} C + \alpha \log_{10} P_{\text{in}}
+$$
+此為線性關係，可用最小二乘法求解斜率 $\alpha$ 與截距 $\log_{10} C$。
+
+\begin{lstlisting}[caption=對數空間線性擬合 (核心邏輯), firstnumber=164]
+# (Inside plot_pin_statistics.py, main function, log scale block)
+# ... previous code to get series_pins, series_vals ...
+
+positive_mask = (series_pins > 0) & (series_vals > 0)
+if np.count_nonzero(positive_mask) < 2:
+    # print(f"Warning: insufficient positive data for log-log fit ({label})", file=sys.stderr)
+    # continue
+    pass # Error handling omitted for brevity
+
+log_x = np.log10(series_pins[positive_mask])
+log_y = np.log10(series_vals[positive_mask])
+
+# 最小二乘法擬合
+slope, intercept = np.polyfit(log_x, log_y, 1)
+
+# 計算決定係數 R^2 (Optional, not explicitly in plot_pin_statistics.py
+# but good practice and used in plot_research3_trends.py)
+# correlation = np.corrcoef(log_x, log_y)[0, 1]
+# r_squared = correlation ** 2
+
+# 轉換回物理參數
+alpha = slope
+C = 10 ** intercept
+
+# Example usage (printing fit parameters)
+# print(f"Fit for {label}: alpha={alpha:.2f}, C={C:.2e}, R^2={r_squared:.4f}")
+# In the plot script, the slope is used directly in labels and text annotations
+\end{lstlisting}
+
+\subsubsection{擬合線繪製}
+
+在 log-log 圖上繪製擬合線與信賴區間（實作於 \texttt{plot\_pin\_statistics.py}）：
+
+\begin{lstlisting}[caption=擬合線視覺化 (核心邏輯), firstnumber=182]
+# (Inside plot_pin_statistics.py, main function, log scale block, after polyfit)
+# 生成擬合線的 x 座標 (log scale)
+x_fit = np.linspace(log_x.min(), log_x.max(), 200)
+# 計算擬合線的 y 座標 (log scale)
+y_fit = slope * x_fit + intercept
+
+# 繪製擬合線 (轉換回線性座標)
+fit_handle, = ax.plot(
+    10 ** x_fit,
+    10 ** y_fit,
+    linestyle="--",
+    color=color, # Color matches the data series
+    linewidth=1.5,
+    label=f"{label} fit (slope = {slope:.2f})", # Add fit info to legend
+)
+# legend_handles.append(fit_handle) # Add handle to legend list
+\end{lstlisting}
+
+\subsection{程式碼與數據公開}
+
+本研究使用之 COMSOL 模擬結果與後續 Python 分析腳本皆收錄於附件資料夾（如 \texttt{code/}、\texttt{research1/data/}、\texttt{research3/}），並附有 README 說明操作需注意的資料路徑與環境需求。若需重新繪製圖表或檢視原始數據，可依 README 流程在同名資料夾執行對應腳本；所有生成報告的關鍵資料皆已在附件中備份。
+
+\clearpage
+\section{參考文獻}
+\begin{thebibliography}{99}
+    \bibitem{below_cutoff}
+    B. Chaudhury, S. Chaturvedi, A. Sen, P. K. Kaw, (2009).
+    \textit{Mechanism of microwave guiding and plasma generation in below cutoff dimensions}.
+    Retrieved from ResearchGate.
+    
+    \bibitem{comsol_blog}
+    COMSOL. (2013).
+    \textit{Microwave Plasmas}.
+    COMSOL Blog.
+    
+    \bibitem{jet_device}
+    Guo, L., Li, J., Huang, W., Deng, G., Zhang, D., \& Wang, Q. (2025).
+    \textit{Design of a large-sized microwave plasma jet device based on coaxial cable transmission}.
+    AIP Physics of Plasmas, 32(8), 083506.
+    
+    \bibitem{per_electron_power}
+    Ferreira, C. M. (2022).
+    \textit{Concept of power absorbed and lost per electron in surface-wave plasma columns and its contribution to the advanced understanding and modeling of microwave discharges}.
+    Physical Review E, 106, 045202.
+    
+    \bibitem{radial_contraction}
+    Koussis, A. D., et al. (2010).
+    \textit{Radial Contraction of Microwave-Sustained Plasma Columns at Atmospheric Pressure}.
+    Retrieved from ResearchGate.
+    
+    \bibitem{nagatsu_sugai}
+    Nagatsu, M., \& Sugai, H. (1997).
+    \textit{Surface-Wave Plasmas}.
+    13th International Symposium on Plasma Chemistry.
+    
+    \bibitem{aps_model}
+    van Dijk, J., et al. (2012).
+    \textit{Modeling of microwave-induced plasma in argon at atmospheric pressure}.
+    Physical Review E, 85, 056404.
+    
+    \bibitem{swp_wiki}
+    Wikipedia contributors. (2023).
+    \textit{Surface-wave-sustained discharge}.
+    Wikipedia, The Free Encyclopedia.
+
+    \bibitem{griffiths_electrodynamics}
+    Griffiths, D. J. (2017).
+    \textit{Introduction to Electrodynamics} (4th ed.).
+    Cambridge University Press.
+
+    \bibitem{cheng_fieldwave}
+    Cheng, D. K. (2014).
+    \textit{Field and Wave Electromagnetics} (2nd ed.).
+    Pearson.
+
+    \bibitem{lieberman_lichtenberg}
+    Lieberman, M. A., \& Lichtenberg, A. J. (2005).
+    \textit{Principles of Plasma Discharges and Materials Processing} (2nd ed.).
+    Wiley-Interscience.
+
+    \bibitem{chen_plasmaphysics}
+    Chen, F. F. (2016).
+    \textit{Introduction to Plasma Physics and Controlled Fusion} (3rd ed.).
+    Springer.
+
+    \bibitem{chabert_braithwaite}
+    Chabert, P., \& Braithwaite, N. (2011).
+    \textit{Physics of Radio-Frequency Plasmas}.
+    Cambridge University Press.
+
+    \bibitem{fridman_plasmachem}
+    Fridman, A. (2008).
+    \textit{Plasma Chemistry}.
+    Cambridge University Press.
+
+    \bibitem{pozar_microwave}
+    Pozar, D. M. (2011).
+    \textit{Microwave Engineering} (4th ed.).
+    Wiley.
+
+    \bibitem{phelps_lxcat}
+    LXCat Project. (2017).
+    \textit{Phelps database: Electron-neutral collision cross sections for argon (Ar\_xsecs.txt)}.
+    Retrieved from \url{https://www.lxcat.net}.
+\end{thebibliography}
+
+\iffalse
+\section*{附錄}
+(此處可放置額外的數據、推導過程或程式碼等。)
+
+\section*{研究心得}
+(請在此處撰寫至少500字的研究心得。您可以分享在整個研究過程中的學習與成長，例如：最初如何選擇這個題目、在文獻探討中學到了什麼、使用 COMSOL 模擬時遇到了哪些困難又是如何克服的、數據分析的過程中帶給您的啟發、與張存續教授討論後的收穫，以及這次研究經驗對您未來學術或生涯規劃的影響等等。)
+
+\section*{原創性比對}
+(請在此處放置 Turnitin 的原創性比對報告截圖，並填寫下表。)
+
+\vspace{1cm}
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{姓名} & \textbf{指導教授} & \textbf{標題} \\
+\hline
+陳亮宇 & 張存續 教授 & COMSOL 模擬 2.45GHz 圓形波導微波電漿之參數研究... \\
+\hline
+\textbf{相似性(\%)} & \multicolumn{2}{c|}{(請填寫百分比)} \\
+\hline
+\end{tabular}
+\end{table}
+
+\vspace{1cm}
+\noindent
+註：若相似性超過20%，請加上文字說明。
+\fi
+
+\end{document}

@@ -1,0 +1,8 @@
+.DS_Store
+__pycache__/
+electron_density_env/
+plots/
+data/
+pin_density_summary.png
+pin_electron_density_stats.csv
+pin_electron_density_table.csv

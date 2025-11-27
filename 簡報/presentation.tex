@@ -1,0 +1,694 @@
+% COMSOL 微波電漿研究簡報（精簡版 + 理論推導）
+% 風格：極簡黑白
+% 總頁數：約 15 張
+
+\documentclass[11pt, aspectratio=169]{beamer}
+\usetheme[progressbar=frametitle, block=transparent]{metropolis}
+\usefonttheme{professionalfonts}
+
+% ========== 字體設定 ==========
+\usefonttheme[onlymath]{serif}
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setmainfont{Times New Roman}
+\setsansfont{Times New Roman}
+\setCJKmainfont{Songti TC}
+\setCJKsansfont{Songti TC}
+\setCJKmonofont{Songti TC}
+\usepackage{newtxmath}
+\setmonofont{Courier New}
+
+% ========== 數學與圖表 ==========
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[backend=biber,style=authoryear]{biblatex}
+\addbibresource{../references.bib}
+
+% ========== 配色方案：極簡黑白 ==========
+\setbeamercolor{frametitle}{fg=black, bg=white}
+\setbeamercolor{progress bar}{fg=black}
+\setbeamercolor{normal text}{fg=black!90, bg=white}
+\setbeamercolor{block title}{fg=black, bg=black!5}
+\setbeamercolor{block body}{fg=black!90, bg=white}
+\setbeamercolor{alerted text}{fg=black}
+\setbeamercolor{itemize item}{fg=black}
+\setbeamercolor{itemize subitem}{fg=black!70}
+\setbeamercolor{enumerate item}{fg=black}
+
+% ========== 移除導覽符號 ==========
+\setbeamertemplate{navigation symbols}{}
+
+% ========== 標題資訊 ==========
+\title{COMSOL 模擬 2.45GHz 圓形波導\\微波電漿之參數研究}
+\subtitle{不同功率下激發模式轉變分析}
+\author{陳亮宇}
+\institute{國立新竹科學園區實驗高級中等學校}
+\date{2025 年 10 月}
+
+% ========== 正文開始 ==========
+\begin{document}
+
+% ========================================
+% 第一部分：導言 (3 張)
+% ========================================
+
+\maketitle
+
+\begin{frame}[t]{研究背景與動機}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{應用背景}
+      \begin{itemize}
+        \item 微波電漿具備高密度、低污染特性，廣泛應用於蝕刻、CVD 與薄膜沉積等半導體製程。\cite{comsol_blog,chen2016}
+        \item 2.45\,GHz 系統的截止電子密度約為 $7.4\times10^{16}\,\mathrm{m}^{-3}$，超過後理應反射入射微波。\cite{griffiths2017,comsol_blog}
+      \end{itemize}
+
+      \medskip
+
+      \textbf{知識落差}
+      \begin{itemize}
+        \item 過密度電漿仍能持續吸收能量，顯示存在體積波以外的耦合機制。\cite{swp_wiki,nagatsu_sugai}
+        \item 既有冪次律與幾何分析多侷限於低功率單一條件，缺乏跨功率/半徑的統一圖譜。\cite{per_electron_power,below_cutoff}
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \textbf{研究動機}
+      \begin{itemize}
+        \item 釐清體積波與表面波加熱的轉換條件，理解能量如何在過密度區維持。\cite{swp_wiki}
+        \item 量化功率、半徑與電子密度之間的關聯，建立可供設備調校的行為地圖。
+      \end{itemize}
+
+      \medskip
+
+      \textbf{研究策略}
+      \begin{itemize}
+        \item 建立 COMSOL 耦合電磁與電漿模組，橫跨 $P_{\text{in}}=1\sim10^5$ W 與廣泛腔體半徑掃描。
+        \item 以資料管線萃取眾數密度、臨界功率與模式邊界，對照理論模型驗證。
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{三個核心研究問題}
+  \small
+  \begin{block}{研究問題 1：功率-密度關係}
+    輸入功率 $P_{\text{in}}$ 如何影響電子密度 $n_e$？是否存在冪次律關係？
+    \[
+    n_e \propto P_{\text{in}}^{\alpha}
+    \]
+  \end{block}
+
+  \smallskip
+
+  \begin{block}{研究問題 2：幾何效應}
+    不同腔體半徑 $r$ 如何影響點火功率與電漿徑向尺度？
+  \end{block}
+
+  \smallskip
+
+  \begin{block}{研究問題 3：激發模式轉換}
+    激發模式轉換的臨界功率與腔體半徑的關係？物理機制為何？
+  \end{block}
+\end{frame}
+
+% ========================================
+% 第二部分：研究方法 (2 張)
+% ========================================
+
+\begin{frame}[t]{COMSOL 模擬設置：幾何與條件}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \textbf{幾何與邊界}
+      \begin{itemize}
+        \item 2D 軸對稱模型，左端 TEM 端口饋入；同軸內外邊界視為理想導體。
+        \item 內壁允許電子表面複合，離子以玻姆速度入射後中和。
+      \end{itemize}
+      \medskip
+      \textbf{氣體與物種}
+      \begin{itemize}
+        \item 氬氣：$p = 60$ mTorr，$T_0 = 400$ K。
+        \item 物種 $\{e^-, \mathrm{Ar}, \mathrm{Ar}_s, \mathrm{Ar}^+\}$；碰撞截面採 LXCat Phelps (2017)，含激發、逐步電離、潘寧電離與壁面淬滅。
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.41\textwidth}
+      \begin{center}
+        \includegraphics[width=0.95\textwidth]{../個別科學研究成果報告書/plots/模型設置.png}
+      \end{center}
+      \vspace{-0.4em}
+      {\scriptsize 軸對稱幾何：同軸饋入／內外邊界理想導體。}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{COMSOL 模擬設置：方程與參數掃描}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textbf{統御方程與耦合}
+      \medskip
+      \begin{itemize}
+        \item \textbf{電磁場（EMW）：}
+        \item[]
+          \[
+            \nabla \times (\mu_r^{-1}\nabla \times \mathbf{E}) - k_0^2\!\left(\epsilon_r - \frac{j\sigma}{\omega\epsilon_0}\right)\mathbf{E}=0
+          \]
+          由電漿導電率 $\sigma$ 與介電常數回饋。
+        \item \textbf{電子連續性（Plas）：}
+        \item[]
+          \[
+            \partial_t n_e + \nabla\cdot\boldsymbol{\Gamma}_e = R_e
+          \]
+          $R_e$ 含激發、逐步電離、潘寧電離與表面損失；能量方程決定電子溫度與 $\sigma$。
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{掃描策略與輸出}
+      \medskip
+      \begin{itemize}
+        \item \textbf{功率掃描}：$r=47.7$ mm，$P_{in}=1\sim10^5$ W；蒐集電子密度、功率沉積與反射功率。
+        \item \textbf{幾何掃描}：$r=5\sim1000$ mm，基準 $P_{in}=20$ W，逐步調升以取得最小點火功率 $P_{cutoff}(r)$。
+        \item \textbf{模擬輸出}：儲存 2D 場量、徑向切片與 sweep log，供後續結果重現與統計分析。
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{數據分析方法}
+  \footnotesize
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{KDE 眾數計算}
+
+      在對數空間進行核密度估計：
+      \[
+      \text{KDE}(x) = \frac{1}{nh} \sum_{i=1}^n K\left(\frac{x - x_i}{h}\right)
+      \]
+
+      高斯核函數：
+      \[
+      K(u) = \frac{1}{\sqrt{2\pi}} e^{-\frac{u^2}{2}}
+      \]
+
+      優勢：抗極端值干擾
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \textbf{Log-Log 線性擬合}
+
+      對數空間線性回歸：
+      \[
+      \log_{10} n_e = \alpha \log_{10} P_{\text{in}} + \log_{10} C
+      \]
+
+      求解參數：
+      \begin{itemize}
+        \item 冪次指數 $\alpha$
+        \item 係數 $C$
+        \item 決定係數 $R^2$
+      \end{itemize}
+
+      \smallskip
+
+      \textbf{實作細節}：所有數據分析腳本與資料已收錄於附件 `code/` 與 `research*/data/`
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ========================================
+% 第三部分：核心結果 (6 張)
+% ========================================
+
+\begin{frame}[t]{結果 1：功率-密度冪次律關係}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.42\textwidth}
+      \textbf{主要發現}
+      \[
+      n_e \propto P_{\text{in}}^{0.73\sim0.78}
+      \]
+
+      \begin{itemize}
+        \item 對數-對數擬合的斜率穩定落在 0.73–0.78
+        \item 次線性冪律顯示功率提升時電子密度成長趨緩
+        \item 觀察與數據涵蓋 $P_{in}=1\sim 10^5$ W
+      \end{itemize}
+
+    \end{column}
+
+    \begin{column}{0.56\textwidth}
+      \begin{center}
+        \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/P_in vs. Electron Density 的 log-log 圖.png}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 1：點火閾值視覺證據}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{電子密度分布}
+      \begin{itemize}
+        \item 低功率掃描中，密度機率分佈出現明顯斷層
+        \item 斷層對應輸入功率跨越點火閾值 $E_{crit}$
+        \item 支持「雪崩式擊穿」：閾值前難以維持電漿，閾值後密度跳升
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \begin{center}
+        \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/Electron Density Distribution 顯示低功率斷層.png}
+      \end{center}
+      \vspace{-0.4em}
+      {\scriptsize 電子密度機率分佈：10–40 W 區間出現斷層，標記點火跳變。}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 1：理論解析}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{粒子與能量平衡}
+      \begin{itemize}
+        \item 穩態條件：$G=L_{diff}+L_{vol}$，結合能量守恆得到
+        \[
+        P_{in}=C_1 \bar{n}_e + C_2 \bar{n}_e^2
+        \]
+        \item $C_1=\dfrac{D_a V \mathcal{E}_c}{\Lambda^2}$（擴散損失）、$C_2=\beta_{rec} V \mathcal{E}_c$（體複合損失）
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \textbf{冪次律的意義}
+      \begin{itemize}
+        \item 低密度：$C_1 \bar{n}_e \gg C_2 \bar{n}_e^2 \Rightarrow \bar{n}_e \propto P_{in}$
+        \item 高密度：$C_2 \bar{n}_e^2 \gg C_1 \bar{n}_e \Rightarrow \bar{n}_e \propto P_{in}^{1/2}$
+        \item 實際範圍的 $\alpha = 0.73\text{--}0.78$ 顯示兩種損失通道同時主導
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 1：小結}
+  \small
+  \begin{itemize}
+    \item $n_e$ 與 $P_{in}$ 呈次線性冪律，功率提升時密度增長趨於飽和。
+    \item 擴散與體複合損失並存，限制能量耦合效率並決定冪次落在 $0.73\text{--}0.78$。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{結果 2：模式轉換能量沉積（低功率段）}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.44\textwidth}
+      \textbf{體積波跡象}
+      \begin{itemize}
+        \item 10 W：功率沉積集中於腔體中心，維持體積波加熱。
+        \item 20 W：壁面附近出現能量帶，顯示進入點火過渡。
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.52\textwidth}
+      \begin{center}
+        \begin{minipage}{0.48\textwidth}
+          \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/10W功率沉積.png}\\[-0.2em]
+          {\scriptsize 10 W（體積波）}
+        \end{minipage}\hfill
+        \begin{minipage}{0.48\textwidth}
+          \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/20W功率沉積.png}\\[-0.2em]
+          {\scriptsize 20 W（過渡）}
+        \end{minipage}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 2：模式轉換能量沉積（高功率段）}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.44\textwidth}
+      \textbf{表面波成形}
+      \begin{itemize}
+        \item 50 W：能量帶貼近介電壁面，表面波逐漸主導。
+        \item 200 W：沉積壓縮於介面薄層，轉為穩定表面波加熱。
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.52\textwidth}
+      \begin{center}
+        \begin{minipage}{0.48\textwidth}
+          \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/50W功率沉積.png}\\[-0.2em]
+          {\scriptsize 50 W（過渡）}
+        \end{minipage}\hfill
+        \begin{minipage}{0.48\textwidth}
+          \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/200W功率沉積.png}\\[-0.2em]
+          {\scriptsize 200 W（表面波）}
+        \end{minipage}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 2：理論解析}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{模式轉換條件}
+      \begin{itemize}
+        \item 體積波階段：中心區域吸收為主，電子密度維持在 $n_e < n_{cr}$。
+        \item 過渡階段：局部密度逼近 $n_{cr}$ 時，靠近介面的電場增強形成表面能量帶。
+        \item 表面波階段：$n_e > n_{cr}$ 後，能量侷限於介電壁附近的趨膚深度 $\delta_p$。
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \textbf{能量沉積平衡}
+      \begin{itemize}
+        \item 體積波：吸收體積與損失（擴散、體複合）競逐，能量分布寬而均勻。
+        \item 表面波：能量沿介面傳輸，沉積厚度取決於 $\delta_p$ 與擴散長 $L_{phy}$。
+        \item 功率提升將沉積由中心推向壁面，對應圖示中的 10/20/50/200 W 演化。
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 2：小結}
+  \small
+  \begin{itemize}
+    \item 低功率維持體積波，能量沉積集中於腔體中心且電子密度低於 $n_{cr}$。
+    \item 功率逐步提升時，介面附近的能量帶增強，顯示系統進入表面波過渡。
+    \item 表面波形成後，能量侷限於介電壁附近，後續功率主要調整表面層強度。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{結果 3：徑向尺度飽和現象}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{兩段式行為}
+      \begin{itemize}
+        \item $r\lesssim 200$ mm：電漿衰減半徑幾乎與腔體半徑線性同步（壁面限制）
+        \item $r\gtrsim 200$ mm：衰減半徑趨於平台值，幾何放大不再增加電漿尺度
+        \item 飽和值由表面波趨膚深度與擴散-複合長度共同決定
+      \end{itemize}
+
+      \smallskip
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \begin{center}
+        \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/徑向切片分析圖.png}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 3：物理解釋}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{擴散主導區 ($r \lesssim 200$ mm)}
+      \begin{itemize}
+        \item 粒子尚未在體積內複合便抵達管壁，$\beta_{rec}$ 可忽略
+        \item 徑向解受邊界條件限制，$R_{\text{plasma}} \approx r$
+        \item 電漿填滿腔體，徑向尺度跟隨幾何放大
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \textbf{複合主導區 ($r \gtrsim 200$ mm)}
+      \begin{itemize}
+        \item 定義物理尺度 $L_{phy} = \sqrt{D_a / (\beta_{rec} \bar{n}_e)}$
+        \item $r \gg L_{phy}$ 時，粒子在體內複合，與管壁脫離
+        \item 表面波加熱厚度 $\delta_p$ 與 $L_{phy}$ 共同設定飽和值
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 3：徑向衰減量化}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{衰減半徑指標}
+      \begin{itemize}
+        \item 取電子密度衰減至 $\alpha=0.1,0.5,0.9$ 的半徑作為尺度指標
+        \item 小腔體：指標幾乎貼合 $y=x$，證實壁面限制
+        \item 大腔體：三條曲線都趨於常值，顯示與壁面脫離
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \begin{center}
+        \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/分析電子密度的徑向衰減特性.png}
+      \end{center}
+      \vspace{-0.4em}
+      {\scriptsize 電漿衰減半徑 vs. 腔體半徑：小腔體貼合 $y=x$，大腔體進入飽和值。}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 3：小結}
+  \small
+  \begin{itemize}
+    \item 小腔體內徑向半徑與腔體半徑同步，顯示壁面限制的擴散主導。
+    \item 大腔體區域出現飽和值，粒子在體內複合並與壁面脫離。
+    \item 表面波趨膚深度與 $L_{phy}$ 決定了 W-Mode 下的內在尺度上限。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{結果 4：幾何參數對點火邊界的影響}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.42\textwidth}
+      \textbf{觀察重點}
+      \begin{itemize}
+        \item $r<35.9$ mm 的案例需要遠高於其他半徑的點火功率，因為波導落在截止區，微波只能以漸逝波衰減前進。
+        \item 在高功率區段，正常傳播區 ($r>35.9$ mm) 的曲線收斂，顯示表面波加熱時幾何影響趨於消失。
+        \item 特定半徑（如 $r=500$ mm）出現雙階段躍升，推測依序跨越點火閾值與模式轉換兩個門檻。
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.52\textwidth}
+      \begin{center}
+        \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/r2資料集比較圖.png}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 4：激發模式轉換臨界功率}
+\framesubtitle{點火功率擬合}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{點火功率擬合}
+      \[
+      P_{cutoff} \propto r^{-7.42}
+      \]
+
+      \begin{itemize}
+        \item 將波導截止範圍 ($r<35.9$ mm) 的資料擬合後得到 $P_{cutoff} \propto r^{-7.42}$，量化小半徑點火成本的急遽提升。
+        \item 臨界半徑 $r_c = 35.9$ mm 對應 $TE_{11}$ 截止，與前一頁觀察的族群邊界一致。
+        \item 在 log--log 座標下，該冪次量測的是指數模型在此半徑範圍內的局部斜率，便於與理論與實驗交叉驗證。
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \begin{center}
+        \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/截止功率-半徑趨勢分析.png}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 4：激發模式轉換臨界功率}
+\framesubtitle{物理圖像}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textbf{物理圖像}
+      \begin{itemize}
+        \item 小半徑：波導位於截止區，場型為漸逝波，入射功率必須放大才可能在腔體內達到 $E_{crit}$。
+        \item 大半徑：遠離截止可直接傳播；在表面波主導區，正常傳播區的曲線收斂，加熱機制與幾何尺寸脫鉤。
+        \item 點火但 $n_e < n_{cr}$ 時維持體積波加熱；當 $n_e \ge n_{cr}$ 則進入表面波主導。
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.44\textwidth}
+      \begin{center}
+        \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/截止功率-半徑趨勢分析.png}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 4：理論解析}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{漸逝波點火}
+        \footnotesize
+        \begin{itemize}
+          \item \textbf{波導色散}：決定傳播或截止
+            \[
+              \beta^2 = \left(\frac{\omega}{c}\right)^2 - \left(\frac{\chi'_{11}}{r}\right)^2
+            \]
+          \item \textbf{衰減常數}：$r<r_c$ 時 $\beta=i\alpha$
+            \[
+              \alpha(r) = \sqrt{\left(\frac{\chi'_{11}}{r}\right)^2 - \left(\frac{\omega}{c}\right)^2}
+            \]
+          \item \textbf{場強放大}：漸逝波需放大才能點火
+            \[
+              E_{in}(r) = E_{crit} e^{\alpha(r) L}
+            \]
+          \item \textbf{點火功率模型}：入口功率隨 $\alpha(r)$ 指數成長
+            \[
+              P_{cutoff}(r) = E_{crit}^2 \exp\!\bigl(2L\,\alpha(r)\bigr)
+            \]
+        \end{itemize}
+      \end{block}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \begin{block}{對數斜率與偏差}
+        \footnotesize
+        \begin{align*}
+          k(r) &= -\frac{d \ln P_{cutoff}}{d \ln r} =
+          \frac{2L(\chi'_{11})^2}{r^2 \sqrt{\left(\frac{\chi'_{11}}{r}\right)^2 - \left(\frac{\omega}{c}\right)^2}}
+        \end{align*}
+        \begin{itemize}
+          \item 取 $L_{\text{eff}}=20$ mm 時，$k(r)$ 在 5--30 mm 區間落於 $\sim4$--$15$，平均約 7.4，與前一頁冪次擬合一致。
+          \item 偏差來源：$L_{\text{eff}}$ 估計、點火後密度回饋、半徑採樣間距。
+          \item 理論與模擬皆顯示小半徑點火成本呈指數級上升。
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[t]{結果 4：小結}
+  \small
+  \begin{itemize}
+    \item 點火功率隨半徑減小呈急劇上升，反映波導截止造成的漸逝波衰減。
+    \item 當功率足以突破臨界密度後，正常傳播區的曲線收斂，顯示表面波加熱的普適耦合效率。
+    \item 擬合冪次與理論指數關係一致，證實模型對幾何縮尺度的敏感性。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[t]{綜合討論：三項核心機制}
+  \small
+  \begin{block}{機制 1：點火閾值 $E_{crit}$}
+    功率不足時電場無法達到擊穿閾值，電漿停留在未點火區；閾值跨越後電子密度出現跳變。
+  \end{block}
+
+  \vspace{0.2cm}
+
+  \begin{block}{機制 2：模式轉換 $n_e \gtrsim n_{cr}$}
+    當電子密度超過臨界值，體積波被截止並改由表面波維持，加熱區域壓縮至趨膚深度。
+  \end{block}
+
+  \vspace{0.2cm}
+
+  \begin{block}{機制 3：幾何限制與飽和}
+    波導截止半徑 $r_c = 1.841\,c/\omega$ 決定點火難度；大半徑區則受擴散-複合內在尺度支配而飽和。
+  \end{block}
+
+  \vspace{0.2cm}
+
+\begin{alertblock}{整合結論}
+  點火閾值、臨界密度與幾何尺度共同勾勒出三個運行區域，解釋功率-密度map的所有趨勢。
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[t]{綜合討論：運行區域地圖}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.46\textwidth}
+      \textbf{三個運行區}
+      \begin{itemize}
+        \item 區域 I：點火且 $n_e>n_{cr}$，表面波主導高密度區
+        \item 區域 II：點火但 $n_e<n_{cr}$，維持體積波加熱
+        \item 區域 III：功率不足，停留在未點火狀態
+      \end{itemize}
+
+      \smallskip
+
+      \textbf{邊界意義}
+      \begin{itemize}
+        \item 紅虛線：$E_{crit}$ 導出的 $P_{cutoff}(r)$，決定能否點火
+        \item 藍虛線：$n_e=n_{cr}$，決定體積波或表面波機制
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.5\textwidth}
+      \begin{center}
+        \includegraphics[width=\textwidth]{../個別科學研究成果報告書/plots/區域解析.png}
+      \end{center}
+      \vspace{-0.4em}
+      {\scriptsize 功率–密度圖：紅、藍邊界將運行條件劃分為三個區域。}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ========================================
+% 第五部分：結論與展望 (2 張)
+% ========================================
+
+\begin{frame}[t]{主要貢獻}
+\framesubtitle{冪次律與物理解耦}
+  \small
+  \begin{block}{1. 功率-密度冪次律}
+    在 $P_{in}=1\sim 10^5$ W 範圍量化 $n_e \propto P_{in}^{0.7-0.8}$，並以粒子/能量平衡模型解釋其物理來源。
+  \end{block}
+
+  \smallskip
+
+  \begin{block}{2. 點火閾值與模式轉換解耦}
+    找出點火閾值（$E_{crit}$）與模式轉換（$n_{cr}$）兩條邊界，建構三區域運行地圖。
+  \end{block}
+\end{frame}
+
+\begin{frame}[t]{主要貢獻}
+\framesubtitle{資料管線與幾何效應}
+  \small
+  \begin{block}{3. 建立完整數據分析管線}
+    \begin{itemize}
+      \item VTU 檔案解析 → 統計聚合 → 視覺化
+      \item KDE 方法在對數空間的優越性
+      \item 所有腳本與資料夾收錄於附件，支援結果重現
+    \end{itemize}
+  \end{block}
+
+  \smallskip
+
+  \begin{block}{4. 幾何效應與徑向飽和}
+    說明波導截止造成的 $P_{cutoff}$ 急遽上升，以及大腔體下電漿徑向尺度的飽和值。
+  \end{block}
+\end{frame}
+
+\begin{frame}[t]{未來工作}
+  \small
+  \textbf{後續工作重點}
+  \begin{itemize}
+    \item 在模型中納入多組分氣體與反應動力學，評估化學能量損失角色。\cite{fridman2008}
+    \item 加入外加磁場並探討 ECR（電子迴旋共振）對點火與模式邊界的影響。\cite{lieberman2005,chabert2011}
+  \end{itemize}
+\end{frame}
+
+% ========================================
+% 結束頁
+% ========================================
+
+\begin{frame}[allowframebreaks]{參考文獻}
+  \tiny
+  \printbibliography
+\end{frame}
+
+\end{document}
