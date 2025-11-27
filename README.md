@@ -15,6 +15,48 @@
 
 完整研究報告見 `個別科學研究成果報告書/個別科學研究成果報告書.pdf`
 
+## 研究流程
+
+```mermaid
+flowchart TD
+    A[COMSOL Multiphysics 6.0<br/>2D 軸對稱模型] --> B{參數掃描}
+
+    B --> C[實驗一：功率掃描<br/>P_in = 1~10⁵ W<br/>固定 r = 47.7 mm]
+    B --> D[實驗二：幾何掃描<br/>r = 5~1000 mm<br/>尋找點火功率 P_cutoff]
+
+    C --> E[VTU 數據輸出<br/>電子密度、溫度分布]
+    D --> E
+
+    E --> F[數據處理管線]
+    F --> F1[generate_pin_table.py<br/>解析 VTU + 分配功率標籤]
+    F1 --> F2[build_dataset.py<br/>KDE 統計聚合]
+
+    F2 --> G{三個研究方向}
+
+    G --> H[Research 1<br/>功率-密度標度律]
+    G --> I[Research 2<br/>500W 空間分布]
+    G --> J[Research 3<br/>功率-半徑趨勢]
+
+    H --> H1[發現：n_e ∝ P_in^0.73-0.78<br/>次線性冪次律]
+    I --> I1[發現：徑向尺度飽和<br/>大腔體 r>200mm]
+    J --> J1[發現：P_cutoff ∝ r^-7.42<br/>截止波導點火困難]
+
+    H1 --> K[核心結論]
+    I1 --> K
+    J1 --> K
+
+    K --> K1[點火閾值與模式轉換<br/>雙邊界運行地圖]
+    K --> K2[擴散-複合損失競爭<br/>限制能量耦合效率]
+    K --> K3[波導截止與飽和<br/>幾何效應量化]
+
+    style A fill:#e1f5ff
+    style E fill:#fff4e1
+    style K fill:#e8f5e9
+    style H1 fill:#f3e5f5
+    style I1 fill:#f3e5f5
+    style J1 fill:#f3e5f5
+```
+
 ## 資料夾結構
 
 ```
