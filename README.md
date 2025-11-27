@@ -102,7 +102,7 @@ python cli.py
 ## 環境
 
 - Python 3.12
-- COMSOL Multiphysics 6.0（僅用於原始模擬）
+- COMSOL Multiphysics 6.2
 - 主要依賴：numpy, pandas, matplotlib, vtk, scipy
 
 完整依賴清單見 `requirements.txt`
